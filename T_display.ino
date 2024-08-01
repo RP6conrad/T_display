@@ -17,7 +17,7 @@
 #include "soc/timer_group_reg.h"
 #include "Arduino.h"
 #include "Ublox.h"
-#include "E_paper.h"
+#include "T_display.h"
 #include "SD_card.h"
 #include "GPS_data.h"
 #include "ESP32FtpServerJH.h"
@@ -43,8 +43,7 @@ const char* soft_ap_password = "password"; //accespoint password
 extern char Timezone[64];
 bool ap_mode=false;
 extern int cursor_x,cursor_y;
-// constructor for data object named tft 
-//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_MOSI, TFT_SCLK, TFT_RST);
+
 TFT_eSPI tft = TFT_eSPI();
 void setup() { 
   EEPROM.begin(EEPROM_SIZE);
@@ -53,18 +52,11 @@ void setup() {
   Serial.println("setup Serial");
   Serial.println("Serial Txd is on pin: "+String(TX));
   Serial.println("Serial Rxd is on pin: "+String(RX));
-  pinMode(TFT_BL, OUTPUT);      // TTGO T-Display enable Backlight pin 4
-  digitalWrite(TFT_BL, HIGH);   // T-Display turn on Backlight
-  tft.init();           // Initialize ST7789 240x135
-  tft.setRotation(1);
-  tft.fillScreen(TFT_BLACK);
- 
-  tft.setCursor(0, 0);
-  tft.setTextWrap(false);
-  tft.setTextColor(TFT_YELLOW,TFT_BLACK);
-  tft.setTextFont(4);
-  tft.println("T-Display ESP-GPS");
+  
+  Boot_Screen1();
+  
   Serial.println(F("TFT Initialized"));
+  /*
   EEPROM.get(1,RTC_highest_read);
   if((RTC_highest_read<STARTVALUE_HIGHEST_READ)|(RTC_highest_read>MAXVALUE_HIGHEST_READ)){
     EEPROM.put(1,STARTVALUE_HIGHEST_READ) ;
@@ -74,6 +66,7 @@ void setup() {
     }
   RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
   Serial.print("RTC_calibration_bat EEPROM = ");
+  */
   Serial.println(RTC_calibration_bat);
   Serial.println("Configuring WDT...");
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
@@ -88,7 +81,9 @@ void setup() {
   rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO1,GPIO_DRIVE_CAP_3);// https://www.esp32.com/viewtopic.php?t=5840
   rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO2,GPIO_DRIVE_CAP_3);//3.0V @ ublox gps current 50 mA
   gpio_set_drive_capability(UBLOX_GPIO3,GPIO_DRIVE_CAP_3);//rtc_gpio_ necessary, if not no output on RTC_pins 25 en 26, 13/3/2022
-  
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);//for T-display, no need to wake up with timer !!!
+  pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
+  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
   sdSPI.begin(SDCARD_CLK, SDCARD_MISO, SDCARD_MOSI, SDCARD_SS);//default 20 MHz gezet worden !
 
   struct timeval tv = { .tv_sec =  0, .tv_usec = 0 };
@@ -102,48 +97,39 @@ void setup() {
         } 
     else {
       Serial.print("LITTLEFS Mounted with success. Total space= ");
-      int total_bytes = LITTLEFS.totalBytes();
-      int used_bytes = LITTLEFS.usedBytes();
-      float Mbytes = (total_bytes-used_bytes)/1024.0/1024.0;
-      Serial.print(total_bytes);
-      Serial.println(" bytes");
+      int total_Mbytes = LITTLEFS.totalBytes()/(1024*1024);
+      int used_Mbytes = LITTLEFS.usedBytes()/(1024*1024);
+      freeSpace=total_Mbytes-used_Mbytes;
+      //float Mbytes = (total_bytes-used_bytes)/1024.0/1024.0;
+      Serial.print(total_Mbytes);
+      Serial.println(" Mbytes");
       Serial.print("Free space left= ");
-      Serial.print(total_bytes-used_bytes);
-      Serial.println(" bytes");
-      tft.setCursor(0,0);
-      tft.setTextColor(TFT_GREEN,TFT_BLACK);
-      tft.setTextFont(4);
-      tft.print("Flash free:");
-      tft.print(Mbytes);
-      tft.println("Mb");
-      cursor_y=tft.getCursorY();
-      LITTLEFS_OK = true;
-      //Boot_screen();
+      Serial.print(total_Mbytes-used_Mbytes);
+      Serial.println(" Mbytes");
+      LittleFS_OK = true;
+      Boot_Screen1();
       loadConfiguration(filename, filename_backup, config);  // load config file
       Serial.print(F("Print config file..."));
-      if (sdOK|LITTLEFS_OK) printFile(filename); 
+      if (sdOK|LittleFS_OK) printFile(filename); 
     }
   } 
   else {
         sdOK = true;Serial.println("SDCard found!");
         uint64_t cardSize = SD.cardSize() / (1024 * 1024);
-        uint64_t totalBytes=SD.totalBytes() / (1024 * 1024);
-        uint64_t usedBytes=SD.usedBytes() / (1024 * 1024);
-        freeSpace=totalBytes-usedBytes;
-        //Boot_screen();
+        uint64_t totalMBytes=SD.totalBytes() / (1024 * 1024);
+        uint64_t usedMBytes=SD.usedBytes() / (1024 * 1024);
+        freeSpace=totalMBytes-usedMBytes;
+        Boot_Screen1();
         Serial.printf("SD Card Size: %lluMB\n", cardSize); 
-        Serial.printf("SD Total bytes: %lluMB\n", totalBytes); 
-        Serial.printf("SD Used bytes: %lluMB\n", usedBytes); 
-        Serial.printf("SD free space: %lluMB\n", totalBytes-usedBytes); 
+        Serial.printf("SD Total bytes: %lluMB\n", totalMBytes); 
+        Serial.printf("SD Used bytes: %lluMB\n", usedMBytes); 
+        Serial.printf("SD free space: %lluMB\n", totalMBytes-usedMBytes); 
         Serial.println(F("Loading configuration..."));// Should load default config 
         loadConfiguration(filename, filename_backup, config); // load config file
         //Short_push39.button_count=config.field;//set speed_field choice, so counting from correct speed_field !!
         Serial.print(F("Print config file...")); 
         printFile(filename); 
   } 
- // Boot_screen();
- // Update_screen(BOOT_SCREEN);
-  Bat_level_Simon(0);
   WiFi.onEvent(OnWiFiEvent);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -181,15 +167,10 @@ void setup() {
       Serial.println(actual_ssid);
       Serial.print("IP address: ");
       Serial.println(IP_adress);
-      tft.setCursor(0, cursor_y, 4);
-      tft.println("Connected to     ");
-      tft.print(actual_ssid);
-      tft.println("      ");
-      tft.print("IP:");
-      tft.println(IP_adress);
       Wifi_on=true;
       if(sdOK){ftpSrv.begin("esp32","esp32"); }   //username, password for ftp, ftp not implemented for spiffs!!
       OTA_setup();  //start webserver for over the air update
+      Update_screen(WIFI_ON);
       }
   else{
       detachInterrupt(WAKE_UP_GPIO);
@@ -198,11 +179,10 @@ void setup() {
       WiFi.mode(WIFI_OFF);
       Wifi_on=false;
       SoftAP_connection=false;
-      tft.fillScreen(TFT_BLACK);
-      Screen_Init_GPS(); 
-      InfoBar(0);
+      Update_screen(GPS_INIT_SCREEN); 
       GPS_OK = setupGPS();
-      Screen_Init_GPS();
+      //Fill_Screen(TFT_BLACK);
+      Update_screen(GPS_INIT_SCREEN); 
       }
   delay(100);
    //Create RTOS task, so logging and e-paper update are separated (update e-paper is blocking, 800 ms !!)
@@ -257,7 +237,7 @@ void taskOne( void * parameter )
    if (Long_push12.Button_pushed()){ s10.Reset_stats(); s2.Reset_stats();a500.Reset_stats();} //resetten stats   
    #endif  
    if(Long_push39.Button_pushed()) Shut_down();
-
+   if(Long_push35.Button_pushed()) Shut_down();
    if (Short_push39.Button_pushed()){
       if(config.speed_count==0){config.field_actual=Short_push39.button_count;}
       else{
@@ -280,7 +260,9 @@ void taskOne( void * parameter )
         printLocalTime();
         NTP_time_set=false;
         if(!GPS_OK) {
+          Update_screen(GPS_INIT_SCREEN); 
           GPS_OK = setupGPS();
+          Update_screen(GPS_INIT_SCREEN); 
         }
        }
    if((WiFi.status() == WL_CONNECTED)|SoftAP_connection){
@@ -343,7 +325,7 @@ void taskOne( void * parameter )
                 }
           }      //    Alleen speed>0 indien snelheid groter is dan 1m/s + sACC<1 + sat<5 + speed>35 m/s !!!
         }
-        if ((sdOK|LITTLEFS_OK)&(Time_Set_OK==true)&(nav_pvt_message>10)&(nav_pvt_message!=old_message)){
+        if ((sdOK|LittleFS_OK)&(Time_Set_OK==true)&(nav_pvt_message>10)&(nav_pvt_message!=old_message)){
                   old_message=nav_pvt_message;
                   //last_gps_msg=millis();
                   gps_speed=ubxMessage.navPvt.gSpeed; //hier alles naar mm/s !!
@@ -429,24 +411,19 @@ void taskTwo( void * parameter)
     }
     
     static int counter=0;
-    //if (counter==0) tft.fillScreen(TFT_BLACK);
-    delay(200);
-    InfoBar(0);
-    if((!Wifi_on)&(!Time_Set_OK)) {Screen_Init_GPS();counter=1;}
-    else if(Time_Set_OK){
-      if (counter==1) tft.fillScreen(TFT_BLACK); counter=0;
-      GPS_Screen();
-      }
-    //tft.fillRoundRect(50, 100, 10, 30, 0,TFT_WHITE); 
-    //DateTimeRtc(0);
-    /*
-    tft.setCursor(0, 0, 4);
-    tft.setTextColor(TFT_RED,TFT_BLACK); tft.setTextFont(8);
-    tft.print(counter);
-    //display.drawExampleBitmap(ESP_Sat_15, posX, posY, 15, 15, GxEPD_BLACK);
-    tft.drawBitmap( 50, 80,ESP_Sat_15, 15, 15,TFT_BLACK,TFT_GREEN);
-    counter++;
-    */
+    delay(500);
+    if((!Wifi_on)&(!Time_Set_OK)) {Update_screen(GPS_INIT_SCREEN);counter=1;}
+    else if(GPS_Signal_OK==false) Update_screen(WIFI_ON);
+    else if(Time_Set_OK==false) Update_screen(WIFI_ON);
+    else if((gps_speed/1000.0f<config.stat_speed)&(Field_choice==false)){
+          //Update_screen(config.stat_screen[stat_count]);
+          Update_screen(STATS1);
+          }
+    else {
+          Update_screen(SPEED);
+          stat_count=0;
+          }
+   
     /*
     else if(millis()<2000)Update_screen(BOOT_SCREEN);
     else if(trouble_screen) Update_screen(TROUBLE);

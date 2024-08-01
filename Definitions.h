@@ -26,21 +26,15 @@
 #define TFT_RST 23
 #define TFT_BL 4
 
-#define MY_CS       13
-#define MY_SCLK     22
-#define MY_MISO     21
-#define MY_MOSI     17
-/*
-#define SPI_MOSI 23
-#define SPI_MISO -1//standaard is MISO GPIO 19 !!!!
-#define SPI_CLK 18
-*/
 #define SDCARD_SS 13  //13
 #define SDCARD_CLK 22//14
 #define SDCARD_MOSI 17  //15
 #define SDCARD_MISO 21  //2
-#define WAKE_UP_GPIO 35          //default 39
-#define GPIO_NUM_xx GPIO_NUM_35   //default GPIO_NUM_39 type is no int
+#define WAKE_UP_GPIO 35 //button on T-display, used as wakeup source
+#define WAKE_UP_GPIOyy 15 //for reed-switch
+#define BUTTON_PIN_BITMASK 0x8000// pinmask for pin 15, ext1 wake up !!!
+#define GPIO_NUM_xx GPIO_NUM_35   //buton on T-display, used as wakeup source
+#define GPIO_NUM_yy GPIO_NUM_15   //strapping pin, but can used as wakeup source !!
 #define RXD2 32 //yellow is Tx Ublox, Beitian white is Tx
 #define TXD2 33 //green is Rx Ublox, Beitian green is Rx
 #define ADC_EN  14  //ADC_EN is the ADC detection enable port
@@ -62,7 +56,7 @@
 #define MAXVALUE_HIGHEST_READ 2700
 #define FULLY_CHARGED_LIPO_VOLTAGE 4200.0 // to calculate calibration factor :  4200.0/ADC value bij highest reading while charging
 #define uS_TO_S_FACTOR 1000000UL /* Conversion factor for micro seconds to seconds */
-#define TIME_TO_SLEEP  1800UL   //1800UL        /* Time ESP32 will go to sleep (no for 30min, only refresh screen if delta bat > 0.05 V) */
+#define TIME_TO_SLEEP  86400UL   //1800UL        /* Time ESP32 will go to sleep (no for 24h, no need to refresh screen) */
 #define WDT_TIMEOUT 120             //120 seconds WDT, opgelet zoeken naar ssid time-out<dan 10s !!!
 #define MAX_COUNT_WDT_TASK0 10   // 600 seconds max downloadtime for files !!!
 #define MIN_numSV_FIRST_FIX 5     //alvorens start loggen, changed from 4 to 5 7.1/2023

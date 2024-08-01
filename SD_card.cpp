@@ -74,7 +74,7 @@ void Open_files(void) {
           break;
         }
       }
-      if (LITTLEFS_OK) {
+      if (LittleFS_OK) {
         if (!LITTLEFS.exists(filenameERR)) {
           break;
         }
@@ -93,30 +93,30 @@ void Open_files(void) {
   strcat(filenameGPX, "gpx");
   if (config.logUBX == true) {
     if (sdOK) ubxfile = SD.open(filenameUBX, FILE_APPEND);
-    if (LITTLEFS_OK) ubxfile = LITTLEFS.open(filenameUBX, FILE_APPEND);
+    if (LittleFS_OK) ubxfile = LITTLEFS.open(filenameUBX, FILE_APPEND);
     //ubxfile.setBufferSize(4096);
     //if(setvbuf(file, NULL, _IOFBF, 4096) != 0) {}//enlarge buffer SD handle error
   }
 #if defined(GPY_H)
   if (config.logGPY == true) {
     if (sdOK) gpyfile = SD.open(filenameGPY, FILE_APPEND);
-    if (LITTLEFS_OK) gpyfile = LITTLEFS.open(filenameGPY, FILE_APPEND);
+    if (LittleFS_OK) gpyfile = LITTLEFS.open(filenameGPY, FILE_APPEND);
     log_GPY_Header(gpyfile);
   }
 #endif
   if (config.logSBP == true) {
     if (sdOK) sbpfile = SD.open(filenameSBP, FILE_APPEND);
-    if (LITTLEFS_OK) sbpfile = LITTLEFS.open(filenameSBP, FILE_APPEND);
+    if (LittleFS_OK) sbpfile = LITTLEFS.open(filenameSBP, FILE_APPEND);
     log_header_SBP(sbpfile);
   }
   if (config.logGPX == true) {
     if (sdOK) gpxfile = SD.open(filenameGPX, FILE_APPEND);
-    if (LITTLEFS_OK) gpxfile = LITTLEFS.open(filenameGPX, FILE_APPEND);
+    if (LittleFS_OK) gpxfile = LITTLEFS.open(filenameGPX, FILE_APPEND);
     log_GPX(GPX_HEADER, gpxfile);
   }
   if (config.logTXT == true) {
     if (sdOK) errorfile = SD.open(filenameERR, FILE_APPEND);
-    if (LITTLEFS_OK) errorfile = LITTLEFS.open(filenameERR, FILE_APPEND);
+    if (LittleFS_OK) errorfile = LITTLEFS.open(filenameERR, FILE_APPEND);
   }
 }
 void Close_files(void) {
@@ -212,7 +212,7 @@ void loadConfiguration(const char *filename, const char *filename_backup, Config
       wifi_search = 120;  //elongation SoftAP mode to 120s !!!
     }
   }
-  if (LITTLEFS_OK){
+  if (LittleFS_OK){
     if (LITTLEFS.exists(filename)) {
       Serial.println(F("open the config.txt"));
       file = LITTLEFS.open(filename);
@@ -300,8 +300,8 @@ void loadConfiguration(const char *filename, const char *filename_backup, Config
   }
   RTC_Board_Logo = config.Board_Logo;  //copy RTC memory !!
   RTC_Sail_Logo = config.Sail_Logo;    //copy to RTC memory !!
-  //RTC_calibration_bat = config.cal_bat;
-  config.cal_bat=RTC_calibration_bat; //stored in EEPROM !!!
+  RTC_calibration_bat = config.cal_bat;
+  //config.cal_bat=RTC_calibration_bat; //stored in EEPROM !!!
   calibration_speed = config.cal_speed / 1000;  //3.6=km/h, 1.94384449 = knots, speed is now in mm/s
   //time_out_nav_pvt=(1000/config.sample_rate+75);//max time out = 175 ms
   RTC_SLEEP_screen = config.sleep_off_screen % 10;
@@ -336,7 +336,7 @@ void printFile(const char *filename) {
   // Open file for reading
   File file;
   if(sdOK) file = SD.open(filename);
-  if(LITTLEFS_OK) file = LITTLEFS.open(filename);
+  if(LittleFS_OK) file = LITTLEFS.open(filename);
   if (!file.available()) {
     Serial.println(F("Failed to read file"));
     return;

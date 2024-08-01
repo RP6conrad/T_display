@@ -97,13 +97,13 @@ String Print_time(time_t timestamp) {
 
 //Download a file from the SD, it is called in void SD_dir()
 void SD_file_download(String filename) {
-  if (sdOK | LITTLEFS_OK) {
+  if (sdOK | LittleFS_OK) {
     File download;
     if (sdOK) download = SD.open("/" + filename);
-    if (LITTLEFS_OK) download = LITTLEFS.open("/" + filename);
+    if (LittleFS_OK) download = LITTLEFS.open("/" + filename);
     if (download) {
       downloading_file = true;
-      if (sdOK|LITTLEFS_OK) filename.remove(0, 1);  //remove 1 character starting at index 0, this is /, after downloading -> _filename....
+      if (sdOK|LittleFS_OK) filename.remove(0, 1);  //remove 1 character starting at index 0, this is /, after downloading -> _filename....
       server.sendHeader("Content-Disposition", "attachment; filename=" + filename);
       server.sendHeader("Connection", "close");
       server.streamFile(download, "application/octet-stream");
@@ -121,7 +121,7 @@ void SD_file_download(String filename) {
 void printDirectory(const char* dirname, uint8_t levels) {
   File root;
   if (sdOK) root = SD.open(dirname);
-  if (LITTLEFS_OK) root = LITTLEFS.open(dirname);
+  if (LittleFS_OK) root = LITTLEFS.open(dirname);
   if (!root) {
     return;
   }
@@ -147,11 +147,11 @@ void printDirectory(const char* dirname, uint8_t levels) {
       char buffer[40] = "/Archive";                                                                                                                                 //&(file.getLastWrite()>EPOCH_2022)
       strcat(buffer, file.name());                                                                                                                                  //only rename if not Archive listing !!!
       if ((String(file.name()) != "config.txt") & (String(file.name()) != "/config.txt") & (String(file.name()) != "/config_backup.txt") & (String(file.name()) != "config_backup.txt")) {
-        if (sdOK|LITTLEFS_OK) SD.rename(file.name(), buffer);
+        if (sdOK|LittleFS_OK) SD.rename(file.name(), buffer);
       }
     } else {
       String filename = String(file.name());
-      if (sdOK|LITTLEFS_OK) filename.remove(0, 1);  //remove 1 character starting at index 0
+      if (sdOK|LittleFS_OK) filename.remove(0, 1);  //remove 1 character starting at index 0
       webpage += "<tr><td width='20%'>" + filename + "</td>";
       int bytes = file.size();
       String fsize = "";
@@ -192,18 +192,18 @@ void printDirectory(const char* dirname, uint8_t levels) {
 
 //Delete a file from the SD, it is called in void SD_dir()
 void SD_file_delete(String filename) {
-  if (sdOK | LITTLEFS_OK) {
+  if (sdOK | LittleFS_OK) {
     //SendHTML_Header();
     File dataFile;
     if (sdOK) dataFile = SD.open("/" + filename, FILE_READ);               //Now read data from SD Card
-    if (LITTLEFS_OK) dataFile = LITTLEFS.open("/" + filename, FILE_READ);  //Now read data from SD Card
+    if (LittleFS_OK) dataFile = LITTLEFS.open("/" + filename, FILE_READ);  //Now read data from SD Card
     if (dataFile) {
       if (sdOK) {
         if (SD.remove("/" + filename)) {
           Serial.println(F("SD File deleted successfully"));
         }  //toegevoegd
       }
-      if (LITTLEFS_OK) {
+      if (LittleFS_OK) {
         dataFile.close();
         if (LITTLEFS.remove("/" + filename)) {
           Serial.println(F("LITTLEFS File deleted successfully"));
@@ -244,7 +244,7 @@ void SD_archive_file(void) {
 }
 //Initial page of the server web, list directory and give you the chance of deleting and uploading
 void SD_dir(int archive) {
-  if (sdOK | LITTLEFS_OK) {
+  if (sdOK | LittleFS_OK) {
     //Action acording to post, dowload or delete, by MC 2022
     if (server.args() > 0)  //Arguments were received, ignored if there are not arguments
     {
@@ -267,9 +267,9 @@ void SD_dir(int archive) {
     }
     File root;
     if (sdOK) root = SD.open("/");
-    if (LITTLEFS_OK) root = LITTLEFS.open("/");
+    if (LittleFS_OK) root = LITTLEFS.open("/");
     uint64_t free_kbytes;
-    if(LITTLEFS_OK) free_kbytes = (LITTLEFS.totalBytes() - LITTLEFS.usedBytes())/1024;
+    if(LittleFS_OK) free_kbytes = (LITTLEFS.totalBytes() - LITTLEFS.usedBytes())/1024;
     if(sdOK) {
         uint64_t totalBytes=SD.totalBytes();
         uint64_t usedBytes=SD.usedBytes();
@@ -355,7 +355,7 @@ void handleFileUpload() {
       SD.remove(filename);                         //Remove a previous version, otherwise data is appended the file again
       UploadFile = SD.open(filename, FILE_WRITE);  //Open the file for writing in SD (create it, if doesn't exist)
     }
-    if (LITTLEFS_OK) {
+    if (LittleFS_OK) {
       LITTLEFS.remove(filename);                         //Remove a previous version, otherwise data is appended the file again
       UploadFile = LITTLEFS.open(filename, FILE_WRITE);  //Open the file for writing in SD (create it, if doesn't exist)
     }
@@ -396,7 +396,7 @@ void Config_TXT() {
 }
 
 void handleConfigUpload() {
-  if (sdOK | LITTLEFS_OK) {
+  if (sdOK | LittleFS_OK) {
     File file;
     if (sdOK) {
       SD.remove("/config_backup.txt");
@@ -409,7 +409,7 @@ void handleConfigUpload() {
         return;
       }
     }
-    if (LITTLEFS_OK) {
+    if (LittleFS_OK) {
       LITTLEFS.remove("/config_backup.txt");
       LITTLEFS.rename("/config.txt", "/config_backup.txt");
       LITTLEFS.remove("/config.txt");
@@ -429,10 +429,9 @@ void handleConfigUpload() {
     //gnss 2 = GPS + GLONAS (default M8 ROM 2)
     //gnss 1 = GPS + GALILEO (not working for M8)
     //gnss 0 = GPS + BEIDOU
-    EEPROM.get(1,RTC_highest_read);
-    RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
-    //doc["cal_bat"] = serialized(server.arg("cal_bat"));
-    doc["cal_bat"] = RTC_calibration_bat;
+    //EEPROM.get(1,RTC_highest_read);
+    //RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
+    doc["cal_bat"] = serialized(server.arg("cal_bat"));
     doc["cal_speed"] = serialized(server.arg("cal_speed"));
     doc["sample_rate"] = server.arg("sample_rate").toInt();
     doc["gnss"] = server.arg("gnss").toInt();

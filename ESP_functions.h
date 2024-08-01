@@ -1,7 +1,7 @@
 #ifndef ESP_FUNCTIONS
 #define ESP_FUNCTIONS
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver 5.85";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver 5.86";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 /*
 #if defined(_GxGDEH0213B73_H_) 
@@ -24,7 +24,7 @@ char TimeZone[64] ="GMT0";
 int sdTrouble=0;
 bool sdOK = false;
 bool button = false;
-bool LITTLEFS_OK;
+bool LittleFS_OK;
 bool reed = false;
 bool deep_sleep = false;
 bool Wifi_on=true;
@@ -145,15 +145,7 @@ Button_push Short_push12 (12,50,15,1); //GPIO12 pull up, 100ms push time, 15s lo
 Button_push Long_push12 (12,2000,10,4); //GPIO12 pull up, 2000ms push time, 10s long_pulse, count 4, reset STAT screen 4&5
 Button_push Short_push39 (WAKE_UP_GPIO,10,10,9);//was 39
 Button_push Long_push39 (WAKE_UP_GPIO,1500,10,9);//was 39
-
-#if defined(_GxDEPG0266BN_H_) //only for screen BN266, Rolzz... !!!
-//GxIO_Class io(SPI, /*CS=5*/ ELINK_SS, /*DC=*/ 19, /*RST=*/4);
-//GxEPD_Class display(io, /*RST=*/4, /*BUSY=*/34);
-#else
-//GxIO_Class io(SPI, /*CS=5*/ ELINK_SS, /*DC=*/ ELINK_DC, /*RST=*/ ELINK_RESET);
-//GxEPD_Class display(io, /*RST=*/ ELINK_RESET, /*BUSY=*/ ELINK_BUSY);
-#endif
-
+Button_push Long_push35 (WAKE_UP_GPIOyy,1500,10,9);//reed switch on pin 15
 SPIClass sdSPI(VSPI);//was VSPI
 
 const char *filename = "/config.txt";
@@ -186,7 +178,7 @@ void print_wakeup_reason(){
                                       break;
                                       }
                                     }
-                                 rtc_gpio_deinit(GPIO_NUM_xx);//was 39   
+                                 rtc_gpio_deinit(GPIO_NUM_xx);//was 39  
                                  reed=1;   
                                  esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
                                  Boot_screen();
@@ -197,7 +189,8 @@ void print_wakeup_reason(){
                                   analog_mean = analogRead(PIN_BAT);
                                   for(int i=0;i<10;i++){
                                         Update_bat();
-                                        }                                 
+                                        } 
+                                  /*                                     
                                   if((int)analog_mean>RTC_highest_read){ 
                                     RTC_highest_read=(int)analog_mean; 
                                     EEPROM.put(1,RTC_highest_read) ;
@@ -205,7 +198,8 @@ void print_wakeup_reason(){
                                     RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
                                     Serial.print("New RTC_highest_read = ");
                                     Serial.println(RTC_highest_read);
-                                    }   
+                                    } 
+                                  */    
                                   esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0); //was 39  1 = High, 0 = Low
                                   if(abs(RTC_voltage_bat-RTC_old_voltage_bat)>MINIMUM_VOLTAGE_CHANGE){
                                     Sleep_screen(RTC_SLEEP_screen);
@@ -238,12 +232,14 @@ void go_to_sleep(uint64_t sleep_time){
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);//flash in deepsleep, CS stays HIGH!!
   gpio_deep_sleep_hold_en();
-  esp_sleep_enable_timer_wakeup( uS_TO_S_FACTOR*sleep_time);
+  //esp_sleep_enable_timer_wakeup( uS_TO_S_FACTOR*sleep_time);
   Serial.println("Setup ESP32 to sleep for every " + String((int)sleep_time) + " Seconds");
   Serial.println("Going to sleep now");
-  Serial.flush(); 
-  delay(3000);//time needed for showing go to sleep screen
-  esp_deep_sleep(uS_TO_S_FACTOR*sleep_time);
+  Serial.flush();
+  delay(3000);
+  esp_deep_sleep_start();  
+  //delay(3000);//time needed for showing go to sleep screen
+  //esp_deep_sleep(uS_TO_S_FACTOR*sleep_time);
 }
 
 void Shut_down(void){
@@ -285,7 +281,7 @@ void Shut_down(void){
             RTC_hour=(tmstruct.tm_hour);
             RTC_min=(tmstruct.tm_min);
             }
-        RTC_old_voltage_bat=0; //to force refresh the sleep screen when shutting down !!!    
+        RTC_old_voltage_bat=0; //to force refresh the sleep screen when shutting down !!!   
         go_to_sleep(5);//got to sleep after 5 s, this to prevent booting when GPIO39 is still low !     
 }
 void Update_bat(void){
@@ -385,16 +381,8 @@ void Search_for_wifi(void) {
   while ((WiFi.status() != WL_CONNECTED)&(SoftAP_connection==false)){  
     if(Short_push39.Button_pushed()){ap_mode=true;esp_task_wdt_reset();break;}
     Update_bat();        
-    tft.setCursor(0,cursor_y, 4);
-    if(ap_mode){
-      tft.print("AP active for: ");
-      tft.print(wifi_search);tft.println("     ");
-      tft.print(soft_ap_ssid);tft.println("       ");}
-    else{
-      tft.print("Search ");tft.print(wifi_search);tft.println("     ");
-      tft.print(actual_ssid);
-      tft.println("             ");
-      }
+    if(ap_mode){Update_screen(WIFI_SOFT_AP);}
+    else {Update_screen(WIFI_STATION); }
     Serial.print(".");
     wifi_search--;
     delay(1000);
