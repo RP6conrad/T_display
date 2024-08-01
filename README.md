@@ -5,6 +5,7 @@ GPS logger for Speedsurfing, based on ESP32 & Ublox  hardware.  This is a open s
 
 
 #### Hardware :
+![T_display_GPS](https://github.com/user-attachments/assets/107f00fc-0653-4c78-b557-dcd038ae628a)
 - LCD display 240*135 with build in ESP32 and 16 MB flash (lilygo ttgo T-display).
 - SD-card holder + SD card is optional, but with 16MB Flash, 13MB can be used as file storage. With .gpy@5Hz files, you can log >20 h.
 - A gps module ublox M8n / M9 / M10 is connected over serial. 
