@@ -169,8 +169,18 @@ void Update_screen(int screen){
   static int Old_Screen;
   if(Old_Screen!=screen)tft.fillScreen(TFT_BLACK);  
   Old_Screen=screen;
-  tft.setCursor(0,cursor_y, 4);
   if(screen==WIFI_STATION){
+    int Mbytes=freeSpace;
+    tft.setCursor(0,0);
+    tft.setTextColor(TFT_GREEN,TFT_BLACK);
+    if(Mbytes<5)tft.setTextColor(TFT_YELLOW,TFT_BLACK);
+    if(Mbytes<2)tft.setTextColor(TFT_RED,TFT_BLACK);
+    tft.setTextFont(4);
+    if(LittleFS_OK) tft.print("Flash free:");
+    if(sdOK) tft.print("SD free:");
+    tft.print(Mbytes);
+    tft.println("Mb   ");
+    tft.setTextColor(TFT_GREEN,TFT_BLACK);
     tft.print("Search for ");tft.print(wifi_search);tft.println(" s    ");
     tft.print(actual_ssid);
     tft.println("             ");

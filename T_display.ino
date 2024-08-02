@@ -10,6 +10,7 @@
 #include <WiFiSTA.h>
 #include <WiFiType.h>
 #include <WiFiUdp.h> 
+#include <ESPmDNS.h>
 #include "FS.h"
 #include "SPI.h"
 #include "sys/time.h"
@@ -40,6 +41,7 @@ const char* ssid2 = config.ssid2; //WiFi SSID
 const char* password2 = config.password2; //WiFi Password
 const char* soft_ap_ssid = "ESP32AP"; //accespoint ssid
 const char* soft_ap_password = "password"; //accespoint password
+//const char* hostname = "ESP-GPS";
 extern char Timezone[64];
 bool ap_mode=false;
 extern int cursor_x,cursor_y;
@@ -141,6 +143,8 @@ void setup() {
   Search_for_wifi(); 
    if ((WiFi.status() != WL_CONNECTED)&(ap_mode==false)) {
     WiFi.disconnect();
+   // WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
+   // WiFi.setHostname(hostname); //define hostname
     WiFi.begin(ssid2, password2);
     actual_ssid=ssid2;  
     wifi_search=10;

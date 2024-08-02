@@ -13,7 +13,7 @@ https://github.com/italocjs/ESP32_OTA_APMODE/blob/main/Main.cpp
 #include "OTA_html.h"
 //#include "ESP_functions.h"
 bool downloading_file = false;
-const char* host = "esp32";
+const char* host = "ESP-GPS";
 extern const char E_paper_version[16];
 extern RTC_DATA_ATTR float RTC_calibration_bat;
 extern RTC_DATA_ATTR int RTC_highest_read;
@@ -609,13 +609,17 @@ void OTA_setup(void) {
   /*use mdns for host name resolution*/
 
   /* add initialize sd card */
+
   if (!MDNS.begin(host)) {  //http://esp32.local
     Serial.println("Error config up MDNS responder!");
+    /*
     while (1) {
       delay(1000);
     }
+    */
   }
   Serial.println("mDNS responder started");
+  
   /*return index page which is stored in serverIndex */
   server.on("/firmware", HTTP_GET, []() {
     makeLoginString();

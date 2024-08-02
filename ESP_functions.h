@@ -1,24 +1,9 @@
 #ifndef ESP_FUNCTIONS
 #define ESP_FUNCTIONS
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver 5.86";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.86";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
-/*
-#if defined(_GxGDEH0213B73_H_) 
-const char E_paper_version[16]="E-paper 213B73";
-#endif
-#if defined(_GxDEPG0213BN_H_) 
-const char E_paper_version[16]="E-paper 213BN";
-#endif
-#if defined(_GxGDEM0213B74_H_) 
-const char E_paper_version[16]="E-paper 213B74";
-#endif
-#if defined(_GxDEPG0266BN_H_) 
-const char E_paper_version[16]="E-paper 266BN";
-#endif
-*/
-//extern const char* soft_ap_ssid; //accespoint ssid
-//extern const char* soft_ap_password; //accespoint password
+
 char Ublox_type[20]="Ublox unknown...";
 char TimeZone[64] ="GMT0";
 int sdTrouble=0;
