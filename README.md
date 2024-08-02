@@ -38,6 +38,7 @@ SW is written in Arduino IDE (C++). For easy access to the files on the sd, a ft
 - Change next file for compiling with Arduino IDE 2.02 (SD(esp32) to SD) C:\Users\andre\AppData\Local\Arduino15\packages\esp32\hardware\esp32\1.0.6\libraries\SD\library.properties
 - ArduinoJson version 6.17.2
 ##### Building manual / first flashing :
+https://docs.google.com/document/d/1EAuqvbSOyW8XMN_1-I5Rsge2eNxJeE1X47yJEWSanZo/edit?usp=sharing
 ![T_display_wiring_small](https://github.com/user-attachments/assets/bd4a129b-077c-40a8-a71f-e7b644c1f0c1)
 ##### Quick User guide
 https://docs.google.com/document/d/1KfDua0H2_-J25e4L3CR8Znd8aIM6bbTPa6EjC0b7B3U/edit?usp=sharing
