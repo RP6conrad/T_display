@@ -378,9 +378,11 @@ int Set_GPS_Time(float time_offset){
         unix_timestamp =  mktime(&my_time);//mktime returns local time, so TZ is important !!!
         struct timeval tv = { .tv_sec = (time_t)(unix_timestamp), .tv_usec = 0 };  //clean utc time !!     
         settimeofday(&tv, NULL);
+      
         setenv("TZ",TimeZone,1);
         tzset();     //this works for CET, but TZ string is different for every Land / continent....
-        delay(10);//
+       
+        delay(10);
         if(!getLocalTime(&tmstruct)){
             Serial.println("Can't get time1...");
             return false;

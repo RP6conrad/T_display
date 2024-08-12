@@ -1,3 +1,7 @@
+  ###Changes SW5.87
+* LCD Backlight configurable, can be switched off @ stat-speed for current saving
+* Timezone bugs in gpy file correction
+  
   ###Changes SW5.85
 * changed value STARTVALUE_HIGHEST_READ 2500 -> 2300, otherwise out of limit in config ! 
 * Wifi searches fist for SSID1, then SSID2, if Wakeup is pushed -> AP-mode 

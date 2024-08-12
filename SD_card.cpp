@@ -390,6 +390,8 @@ void Session_info(GPS_data G) {
   strcat(message, tekst);
   sprintf(tekst, "Timezone : %f h\n", config.timezone);
   strcat(message, tekst);
+  sprintf(tekst, "tz offset (sec) : %d \n", _timezone);
+  strcat(message, tekst);
   strcat(message,TimeZone);
   strcat(message, "\nDynamic model: ");
   if (config.dynamic_model == 1) strcat(message, "Sea");
@@ -538,10 +540,15 @@ void Session_results_Alfa(Alfa_speed A, GPS_speed M) {
   }
 }
 void TimeZone_env (float timezone){     //without daylight saving, standard TZ strirng
-  int hours=(int)(timezone);
-  int minutes=abs((int)(timezone*60)%60);
+  int hours=(int)(timezone);//vb 6.5 -> 6
+  int minutes=abs((int)(timezone*60)%60);//vb  6.5*60=390 %60 = 30
   char time_noDST[64]="GMT0";
-  sprintf(time_noDST,"<%d%d>%d:%d",hours,minutes,-hours,minutes);
+  if(hours>0){
+    sprintf(time_noDST,"CET-%d:%02d",hours,minutes); //default TZ string is CET + timezone offset, no DST possible
+    }
+  else{
+    sprintf(time_noDST,"CET+%d:%02d",-hours,minutes);
+    }  
   strcpy(TimeZone,time_noDST); //standard timezone without daylightsaving
   if(config.timezone_DST){
     switch((int)(timezone*100)){
@@ -555,7 +562,7 @@ void TimeZone_env (float timezone){     //without daylight saving, standard TZ s
       case 800: strcpy (TimeZone,"PST8PDT,M3.2.0,M11.1.0");break;//America/Los_Angeles
       case 950: strcpy (TimeZone,"ACST-9:30ACDT,M10.1.0,M4.1.0/3");break;//Australia/Adelaide
       case 1000: strcpy (TimeZone,"AEST-10AEDT,M10.1.0,M4.1.0/3");break;//Antarctica/Macquarie
-      case 1050: strcpy (TimeZone,"<+1030>-10:30<+11>-11,M10.1.0,M4.1.0");break;//Australia/Lord_Howe
+      case 1050: strcpy (TimeZone,"ACST-10:30ACDT,M10.1.0,M4.1.0/3");break;//Australia/Lord_Howe
       case 1200: strcpy (TimeZone,"NZST-12NZDT,M9.5.0,M4.1.0/3");break;//Antarctica/McMurdo
       case -100: strcpy (TimeZone,"<-01>1<+00>,M3.5.0/0,M10.5.0/1");break;
       case -200: strcpy (TimeZone,"IST-2IDT,M3.4.4/26,M10.5.0");break;

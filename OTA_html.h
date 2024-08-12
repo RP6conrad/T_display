@@ -359,7 +359,7 @@ void html_config(String& webpage){
   //cal_bat
   webpage += "<tr>\n<td>cal_bat</td><td>\n";
   webpage += "<input size='4' type='number' required name='cal_bat' min='1.6' max='1.89' value="+String(RTC_calibration_bat)+" step='0.01'>\n";
-  webpage += "</select>\n</td><td>cal_bat: is the calibration <br> of the battery voltage measurement (1.6-1.89) Only info, auto-calibrate after full load of lipo !.</td>\n</tr>\n"; 
+  webpage += "</select>\n</td><td>cal_bat: is the calibration <br> of the battery voltage measurement (1.6-1.89).</td>\n</tr>\n"; 
   //cal_speed 
   webpage += "<tr><td>cal_speed</td><td>\n<select id='cal_speed' name='cal_speed' type='number'>\n";
   if(config.cal_speed == 3.6) webpage += "<option value='3.60' selected>3.6 km/h</option>\n"; else webpage += "<option value=3.60>3.6 km/h</option>\n";
@@ -422,9 +422,10 @@ void html_config(String& webpage){
   //#ifdef T5_E_PAPER
   //speed_field
   webpage += "<tr>\n<td>speed_field</td><td>\n";
-  webpage += "<input size='8' type='number' required name='speed_field' min='1' max='99999' value="+String(config.field)+" step='1'>\n";
-  webpage += "</select>\n</td><td>speed_field: The preferred value in the first line of the speed screen : 1=Auto switching between Run, Alfa & NM, 2=Run & NM, 3=Alfa, 4=NM, 5= Total distance, 6= 2s/10s, 7= Auto switching between Alfa & 0.5h, 8= Auto switching between Alfa & 1h, 9= Alfa, 1h, and good run. If more then 1 digit, toggle between separat digits : 841 toggle between 1,4 and 8 !</td>\n</tr>\n";
+  webpage += "<input size='8' type='number' required name='speed_field' min='0' max='99999' value="+String(config.field)+" step='1'>\n";
+  webpage += "</select>\n</td><td>speed_field: If this value is set to 0, LCD Backlight is switched off when stat-speed is exceeded (battery savings)!</td>\n</tr>\n";
   //speed_large_font
+  #ifndef TTGO_T_DISPLAY
   webpage += "<tr><td>speed_large_font</td><td>\n<select id='speed_large_font' name='speed_large_font'>\n";
   Drop_down_menu(config.speed_large_font,3,"Giant_Font ON",webpage);
   Drop_down_menu(config.speed_large_font,2,"Simon_Font ON",webpage);
@@ -443,6 +444,7 @@ void html_config(String& webpage){
   webpage += "<tr>\n<td>Stat_screens_time</td><td>\n";
   webpage += "<input size='8' type='number' required name='Stat_screens_time' min='2' max='10' value="+String(config.Stat_screens_time)+" step='1'>\n";
   webpage += "</select>\n</td><td>The time between toggle the different stat screens</td>\n</tr>\n";
+  #endif
   //Stat_speed
   webpage += "<tr>\n<td>stat_speed</td><td>\n";
   webpage += "<input size='8' type='number' required name='stat_speed' min='0' max='10' value="+String(config.stat_speed)+" step='1'>\n";
@@ -452,6 +454,7 @@ void html_config(String& webpage){
   webpage += "<input size='8' type='number' required name='start_logging_speed' min='0' max='10' value="+String(config.start_logging_speed)+" step='1'>\n";
   webpage += "</select>\n</td><td>If the actual speed(in m/s) exceed this start_logging_speed, then the log is started</td>\n</tr>\n"; 
   //GPIO12_screens
+  #ifndef TTGO_T_DISPLAY
   webpage += "<tr>\n<td>GPIO12_screens</td><td>\n";
   webpage += "<input size='8' type='number' required name='GPIO12_screens' min='0' max='1000' value="+String(config.GPIO12_screens_persist)+" step='1'>\n";
   webpage += "</select>\n</td><td>GPIO12_screens choice : Every digit shows the according GPIO_screen after each push. Screen 4 = s10 runs, screen 5 = alfa's.</td>\n</tr>\n";
@@ -501,6 +504,7 @@ void html_config(String& webpage){
   webpage += "<tr>\n<td>sleep_off_screen</td><td>\n";
   webpage += "<input size='8' type='number' required name='sleep_off_screen' min='0' max='1000' value="+String(config.sleep_off_screen)+" step='1'>\n";
   webpage += "</select>\n</td><td>Choice for switch_off (first digit 0 or 1) and sleep_screen (second digit 0 or 1): </td>\n</tr>\n";
+  #endif
   //bat value in % or volt
   #if defined(_GxDEPG0266BN_H_) 
   webpage += "<tr><td>bat_choice</td><td>\n<select id='bat_choice' name='bat_choice'>\n";

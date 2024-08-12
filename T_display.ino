@@ -188,6 +188,8 @@ void setup() {
       //Fill_Screen(TFT_BLACK);
       Update_screen(GPS_INIT_SCREEN); 
       }
+  wdt_task0=millis();     
+  wdt_task1=millis();    
   delay(100);
    //Create RTOS task, so logging and e-paper update are separated (update e-paper is blocking, 800 ms !!)
   //xTaskCreate(
@@ -264,9 +266,9 @@ void taskOne( void * parameter )
         printLocalTime();
         NTP_time_set=false;
         if(!GPS_OK) {
-          Update_screen(GPS_INIT_SCREEN); 
+          //Update_screen(GPS_INIT_SCREEN); 
           GPS_OK = setupGPS();
-          Update_screen(GPS_INIT_SCREEN); 
+          //Update_screen(GPS_INIT_SCREEN); 
         }
        }
    if((WiFi.status() == WL_CONNECTED)|SoftAP_connection){
@@ -423,11 +425,12 @@ void taskTwo( void * parameter)
           //Update_screen(config.stat_screen[stat_count]);
           Update_screen(STATS1);
           }
-    else {
+    else {       
           Update_screen(SPEED);
           stat_count=0;
           }
-   
+    if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)) digitalWrite(TFT_BL, LOW); 
+          else digitalWrite(TFT_BL, HIGH); 
     /*
     else if(millis()<2000)Update_screen(BOOT_SCREEN);
     else if(trouble_screen) Update_screen(TROUBLE);

@@ -79,7 +79,6 @@ void ReportFileNotPresent(String target) {
 //File size conversion kb-> MB / GB
 String file_size(int kbytes) {
   String fsize = "";
-  //if (kbytes < 1024) fsize = String(kbytes) + " B";
   if (kbytes < 1024) fsize = String(kbytes) + " KB";
   else if (kbytes < (1024 * 1024)) fsize = String(kbytes /1024.0, 2) + " MB";
   else fsize = String(kbytes / 1024.0 / 1024.0, 2) + " GB";
@@ -89,7 +88,7 @@ String file_size(int kbytes) {
 String Print_time(time_t timestamp) {
   char buff[30];
   tm *tm_local=localtime(&timestamp);
-  if(tm_local->tm_isdst==1)timestamp=timestamp-3600;//correction for littlefs bug if dst is active
+  if((tm_local->tm_isdst==1)&(sdOK)) timestamp=timestamp-3600;//correction for littlefs bug if dst is active
   strftime(buff, 30, "%Y-%m-%d  %H:%M:%S", localtime(&timestamp));//was localtime
   return buff;
 }
