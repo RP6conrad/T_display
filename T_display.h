@@ -118,6 +118,7 @@ extern Alfa_speed a500;
 extern GPS_time S1800;
 extern GPS_time S3600;
 extern TFT_eSPI tft;
+extern TFT_eSprite img;
 extern int cursor_x,cursor_y;
 const char* gpsChip(int longname);
 void Boot_screen(void);//old

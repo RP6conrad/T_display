@@ -24,6 +24,7 @@
 #include "ESP32FtpServerJH.h"
 #include "OTA_server.h" 
 #include <esp_task_wdt.h>
+#include "freertos/task.h"//added V3
 #include <driver/rtc_io.h>
 #include <driver/gpio.h>
 #include <lwip/apps/sntp.h>
@@ -47,6 +48,7 @@ bool ap_mode=false;
 extern int cursor_x,cursor_y;
 
 TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite img = TFT_eSprite(&tft);
 void setup() { 
   EEPROM.begin(EEPROM_SIZE);
   config.ublox_type = EEPROM.read(0);
@@ -128,7 +130,7 @@ void setup() {
         Serial.printf("SD free space: %lluMB\n", totalMBytes-usedMBytes); 
         Serial.println(F("Loading configuration..."));// Should load default config 
         loadConfiguration(filename, filename_backup, config); // load config file
-        //Short_push39.button_count=config.field;//set speed_field choice, so counting from correct speed_field !!
+        //Short_push35.button_count=config.field;//set speed_field choice, so counting from correct speed_field !!
         Serial.print(F("Print config file...")); 
         printFile(filename); 
   } 
@@ -244,17 +246,17 @@ void taskOne( void * parameter )
    #endif  
    if(Long_push39.Button_pushed()) Shut_down();
    if(Long_push35.Button_pushed()) Shut_down();
-   if (Short_push39.Button_pushed()){
-      if(config.speed_count==0){config.field_actual=Short_push39.button_count;}
+   if (Short_push35.Button_pushed()){
+      if(config.speed_count==0){config.field_actual=Short_push35.button_count;}
       else{
-        if(Short_push39.button_count>config.speed_count){
-          Short_push39.button_count=0;
+        if(Short_push35.button_count>config.speed_count){
+          Short_push35.button_count=0;
           }
-        config.field_actual=config.speed_screen[Short_push39.button_count];
+        config.field_actual=config.speed_screen[Short_push35.button_count];
         //Serial.print("config.field_actual ");Serial.println(config.field_actual);
         }
       }
-   Field_choice=Short_push39.long_pulse;//10s wachttijd voor menu field keuze....//bug sw 5.54 !!
+   Field_choice=Short_push35.long_pulse;//10s wachttijd voor menu field keuze....//bug sw 5.54 !!
    
    if((WiFi.status() != WL_CONNECTED)&(Wifi_on==true)&(SoftAP_connection==false)){
         Serial.println("No Wifi connection !");
@@ -429,8 +431,13 @@ void taskTwo( void * parameter)
           Update_screen(SPEED);
           stat_count=0;
           }
-    if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)) digitalWrite(TFT_BL, LOW); 
-          else digitalWrite(TFT_BL, HIGH); 
+    if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)){
+     // tft.writecommand(ST7789_DISPOFF);// Switch off the display
+     // tft.writecommand(ST7789_SLPIN);// Sleep the display driver
+      digitalWrite(TFT_BL, LOW); }
+    else {
+      //tft.writecommand(ST7789_DISPON);
+      digitalWrite(TFT_BL, HIGH); }
     /*
     else if(millis()<2000)Update_screen(BOOT_SCREEN);
     else if(trouble_screen) Update_screen(TROUBLE);

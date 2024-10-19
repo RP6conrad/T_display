@@ -1,7 +1,7 @@
 #ifndef ESP_FUNCTIONS
 #define ESP_FUNCTIONS
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver-T 5.87";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.88";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 
 char Ublox_type[20]="Ublox unknown...";
@@ -128,7 +128,8 @@ Alfa_speed A500(50);
 Alfa_speed a500(50);//for  Alfa stats GPIO_12 screens, reset possible !!
 Button_push Short_push12 (12,50,15,1); //GPIO12 pull up, 100ms push time, 15s long_pulse, count 1, STAT screen 4&5
 Button_push Long_push12 (12,2000,10,4); //GPIO12 pull up, 2000ms push time, 10s long_pulse, count 4, reset STAT screen 4&5
-Button_push Short_push39 (WAKE_UP_GPIO,10,10,9);//was 39
+Button_push Short_push35 (WAKE_UP_GPIO,10,10,9);//was 39
+Button_push Short_push15 (WAKE_UP_GPIOyy,10,10,9);//reed switch on GPIO15
 Button_push Long_push39 (WAKE_UP_GPIO,1500,10,9);//was 39
 Button_push Long_push35 (WAKE_UP_GPIOyy,1500,10,9);//reed switch on pin 15
 SPIClass sdSPI(VSPI);//was VSPI
@@ -214,17 +215,17 @@ void go_to_sleep(uint64_t sleep_time){
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Ublox_off();
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);//flash in deepsleep, CS stays HIGH!!
-  gpio_deep_sleep_hold_en();
-  //esp_sleep_enable_timer_wakeup( uS_TO_S_FACTOR*sleep_time);
   Serial.println("Setup ESP32 to sleep for every " + String((int)sleep_time) + " Seconds");
   Serial.println("Going to sleep now");
   Serial.flush();
   delay(3000);
+  pinMode(13, OUTPUT);
+  digitalWrite(13, HIGH);//flash in deepsleep, CS stays HIGH!!
+  digitalWrite(TFT_BL, LOW); 
+  tft.writecommand(ST7789_DISPOFF);// Switch off the display
+  tft.writecommand(ST7789_SLPIN);// Sleep the display driver
+  gpio_deep_sleep_hold_en();
   esp_deep_sleep_start();  
-  //delay(3000);//time needed for showing go to sleep screen
-  //esp_deep_sleep(uS_TO_S_FACTOR*sleep_time);
 }
 
 void Shut_down(void){
@@ -364,7 +365,7 @@ boolean Button_push::Button_pushed(void) {
 }
 void Search_for_wifi(void) {
   while ((WiFi.status() != WL_CONNECTED)&(SoftAP_connection==false)){  
-    if(Short_push39.Button_pushed()){ap_mode=true;esp_task_wdt_reset();break;}
+    if(Short_push35.Button_pushed()|Short_push15.Button_pushed()){ap_mode=true;esp_task_wdt_reset();break;}
     Update_bat();        
     if(ap_mode){Update_screen(WIFI_SOFT_AP);}
     else {Update_screen(WIFI_STATION); }

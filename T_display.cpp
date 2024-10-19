@@ -124,6 +124,8 @@ void Boot_Screen1(void){
     tft.init();           // Initialize ST7789 240x135
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
+    img.createSprite(TFT_WIDTH, TFT_HEIGHT);
+    img.fillScreen(TFT_BLACK);
     pinMode(TFT_BL, OUTPUT);      // TTGO T-Display enable Backlight pin 4
     digitalWrite(TFT_BL, HIGH);   // T-Display turn on Backlight
     tft.setCursor(0, 0);
