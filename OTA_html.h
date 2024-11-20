@@ -419,7 +419,10 @@ void html_config(String& webpage){
   webpage += "<tr>\n<td>archive_days</td><td>\n";
   webpage += "<input size='8' type='number' required name='archive_days' min='0' max='1000' value="+String(config.archive_days)+" step='1'>\n";
   webpage += "</select>\n</td><td>If the files on the sd are older then archive_days, they can be moved to the Archive directory with \"Archive Files\"</td>\n</tr>\n";
-  //#ifdef T5_E_PAPER
+  //speed_screen
+  webpage += "<tr>\n<td>speed_screen</td><td>\n";
+  webpage += "<input size='9' type='text' required name='speed_screen' value="+String(config.speed_screen)+">\n";//input size 9
+  webpage += "</select>\n</td><td>Speed_screens choice :  1=Auto switching between Run, Alfa & NM, 2=Run & NM, 3=Alfa, 4=NM, 5= Total distance, 6= 2s/10s, 7= Auto switching between Alfa & 500m, 8= Auto switching between Alfa & 1h, 9= Alfa, 1h, and good run. If more then 1 digit, toggle between separat digits : 841 toggle between 1,4 and 8 !</td>\n</tr>\n";  
   //speed_field
   webpage += "<tr>\n<td>speed_field</td><td>\n";
   webpage += "<input size='8' type='number' required name='speed_field' min='0' max='99999' value="+String(config.field)+" step='1'>\n";
@@ -436,15 +439,15 @@ void html_config(String& webpage){
   webpage += "<tr>\n<td>bar_length</td><td>\n";
   webpage += "<input size='8' type='number' required name='bar_length' min='100' max='10000' value="+String(config.bar_length)+" step='1'>\n";
   webpage += "</select>\n</td><td>bar_length: Default length = 1852 m for 100% bar (=Nautical mile)</td>\n</tr>\n";
-  //Stat_screens
-  webpage += "<tr>\n<td>Stat_screens</td><td>\n";
-  webpage += "<input size='8' type='number' required name='Stat_screens' min='0' max='9999999' value="+String(config.Stat_screens_persist)+" step='1'>\n";
-  webpage += "</select>\n</td><td>Stat_screens choice : every digit shows the according stat_screen after each other</td>\n</tr>\n";
+  #endif
+  //stat_screen
+  webpage += "<tr>\n<td>stat_screen</td><td>\n";
+  webpage += "<input size='9' type='text' required name='stat_screen' value="+String(config.stat_screen)+">\n";//input size 9
+  webpage += "</select>\n</td><td>Stat_screens choice : every character shows the according stat_screen after each other</td>\n</tr>\n";  
   //Stat_screens_time
   webpage += "<tr>\n<td>Stat_screens_time</td><td>\n";
   webpage += "<input size='8' type='number' required name='Stat_screens_time' min='2' max='10' value="+String(config.Stat_screens_time)+" step='1'>\n";
   webpage += "</select>\n</td><td>The time between toggle the different stat screens</td>\n</tr>\n";
-  #endif
   //Stat_speed
   webpage += "<tr>\n<td>stat_speed</td><td>\n";
   webpage += "<input size='8' type='number' required name='stat_speed' min='0' max='10' value="+String(config.stat_speed)+" step='1'>\n";

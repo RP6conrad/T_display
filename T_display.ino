@@ -45,10 +45,11 @@ const char* soft_ap_password = "password"; //accespoint password
 //const char* hostname = "ESP-GPS";
 extern char Timezone[64];
 bool ap_mode=false;
+bool Refresh_Screen = 1;
 extern int cursor_x,cursor_y;
 
 TFT_eSPI tft = TFT_eSPI();
-TFT_eSprite img = TFT_eSprite(&tft);
+TFT_eSprite sprite = TFT_eSprite(&tft);
 void setup() { 
   EEPROM.begin(EEPROM_SIZE);
   config.ublox_type = EEPROM.read(0);
@@ -56,7 +57,7 @@ void setup() {
   Serial.println("setup Serial");
   Serial.println("Serial Txd is on pin: "+String(TX));
   Serial.println("Serial Rxd is on pin: "+String(RX));
-  
+  print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
   Boot_Screen1();
   
   Serial.println(F("TFT Initialized"));
@@ -76,7 +77,7 @@ void setup() {
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
   //SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, ELINK_SS); //SPI is used for SD-card and for E_paper display !
-  print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
+  //print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
   analog_mean = analogRead(PIN_BAT);//fill FIR filter
  //sometimes after OTA hangs here ???
   pinMode(UBLOX_POWER1, OUTPUT);//Power beitian //default drive strength 2, only 2.7V @ ublox gps
@@ -187,7 +188,6 @@ void setup() {
       SoftAP_connection=false;
       Update_screen(GPS_INIT_SCREEN); 
       GPS_OK = setupGPS();
-      //Fill_Screen(TFT_BLACK);
       Update_screen(GPS_INIT_SCREEN); 
       }
   wdt_task0=millis();     
@@ -400,13 +400,21 @@ void taskTwo( void * parameter)
 {
   while(true){ 
     wdt_task1=millis();
-    stat_count++;//ca 1s per screen update
+    static int last_refresh_time;
+    if ((millis() - last_refresh_time) > 200) {Refresh_Screen = 1;last_refresh_time=millis();}
+    esp_err_t result = esp_task_wdt_reset();  //only way I found to reset the watchdog timer....
+    static int last_millis;
+    if ((millis() - last_millis) / 1000 > config.Stat_screens_time) {
+      stat_count++;
+      last_millis = millis();
+    } 
     if (stat_count>config.screen_count)stat_count=0;//screen_count = 2
     Update_bat();
     if(RTC_voltage_bat<MINIMUM_VOLTAGE) low_bat_count++;
     else low_bat_count=0;
     if(long_push==true){
         Off_screen(RTC_OFF_screen);
+        delay(3000);
         Shut_down();
     }
     else if(low_bat_count>10){
@@ -419,25 +427,30 @@ void taskTwo( void * parameter)
     }
     
     static int counter=0;
-    delay(500);
-    if((!Wifi_on)&(!Time_Set_OK)) {Update_screen(GPS_INIT_SCREEN);counter=1;}
-    else if(GPS_Signal_OK==false) Update_screen(WIFI_ON);
-    else if(Time_Set_OK==false) Update_screen(WIFI_ON);
-    else if((gps_speed/1000.0f<config.stat_speed)&(Field_choice==false)){
-          //Update_screen(config.stat_screen[stat_count]);
-          Update_screen(STATS1);
-          }
-    else {       
-          Update_screen(SPEED);
-          stat_count=0;
-          }
-    if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)){
-     // tft.writecommand(ST7789_DISPOFF);// Switch off the display
-     // tft.writecommand(ST7789_SLPIN);// Sleep the display driver
-      digitalWrite(TFT_BL, LOW); }
-    else {
-      //tft.writecommand(ST7789_DISPON);
-      digitalWrite(TFT_BL, HIGH); }
+    delay(1);
+    if (Refresh_Screen) {
+      Refresh_Screen = 0;
+      if((!Wifi_on)&(!Time_Set_OK)) {Update_screen(GPS_INIT_SCREEN);counter=1;}
+      else if(millis()%12000>8000) { Update_screen(config.stat_screen[stat_count]);}//(GPS_Signal_OK==false) wifi on
+      else if (millis() % 12000 < 4000) {Update_screen(SPEED);}
+      else if(GPS_Signal_OK==false) Update_screen(WIFI_ON);
+      else if(Time_Set_OK==false) Update_screen(WIFI_ON);
+      else if((gps_speed/1000.0f<config.stat_speed)&(Field_choice==false)){
+            Update_screen(config.stat_screen[stat_count]);
+            //Update_screen(STATS5);
+            }
+      else {       
+            Update_screen(SPEED);
+            stat_count=0;
+            }
+      if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)){
+      // tft.writecommand(ST7789_DISPOFF);// Switch off the display
+      // tft.writecommand(ST7789_SLPIN);// Sleep the display driver
+        digitalWrite(TFT_BL, LOW); }
+      else {
+        //tft.writecommand(ST7789_DISPON);
+        digitalWrite(TFT_BL, HIGH); }
+    }    
     /*
     else if(millis()<2000)Update_screen(BOOT_SCREEN);
     else if(trouble_screen) Update_screen(TROUBLE);

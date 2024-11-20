@@ -242,6 +242,15 @@ void loadConfiguration(const char *filename, const char *filename_backup, Config
   config.speed_large_font = doc["speed_large_font"] | 0;
   config.bar_length = doc["bar_length"] | 1852;
   config.Stat_screens = doc["Stat_screens"] | 12;
+  strlcpy(config.speed_screen,                      // <- destination
+          doc["speed_screen"] | "1",          // <- source
+          sizeof(config.speed_screen)); 
+  strlcpy(config.stat_screen,                      // <- destination
+          doc["stat_screen"] | "12",          // <- source
+          sizeof(config.stat_screen)); 
+  strlcpy(config.gpio12_screen,                      // <- destination
+          doc["gpio12_screen"] | "4",          // <- source
+          sizeof(config.gpio12_screen));
   config.Stat_screens_time = doc["Stat_screens_time"] | 2;
   config.stat_speed = doc["stat_speed"] | 1;
   config.start_logging_speed = doc["start_logging_speed"] | 1;
@@ -311,24 +320,10 @@ void loadConfiguration(const char *filename, const char *filename_backup, Config
   int GPIO_12_screens = config.GPIO12_screens;        //preserve value config
   int speed_screens = config.field;                   //preserve speed_screen setting
   if (config.file_date_time == 0) config.logTXT = 1;  //because txt file is needed for generating new file count !!
-  for (int i = 0; i < 9; i++) {
-    config.stat_screen[i] = stat_screen % 10;  //STATSx heeft geen offset !!! 641
-    stat_screen = stat_screen / 10;
-    if (stat_screen > 0) {
-      config.screen_count = i + 1;
-    }
-    config.gpio12_screen[i] = GPIO_12_screens % 10;  //
-    GPIO_12_screens = GPIO_12_screens / 10;
-    if (GPIO_12_screens > 0) {
-      config.gpio12_count = i + 1;
-    }
-    config.speed_screen[i] = speed_screens % 10;   //vb 841, [0]=1, [1]=4,[2]=8,[3]=0.....[8]=0;
-    config.field_actual = config.speed_screen[0];  //vb 841 -> 1 of 3 -> 3
-    speed_screens = speed_screens / 10;
-    if (speed_screens > 0) {
-      config.speed_count = i + 1;  //vb 841 -> 3
-    }
-  }
+  config.screen_count= strlen(config.stat_screen)-1;
+  config.speed_count =strlen(config.speed_screen)-1;
+  config.gpio12_count =strlen(config.gpio12_screen)-1;
+  config.field_actual=config.speed_screen[0];
   TimeZone_env(config.timezone);//to set the correct posic TZ string
 }
 // Prints the content of a file to the Serial

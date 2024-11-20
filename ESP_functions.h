@@ -1,7 +1,7 @@
 #ifndef ESP_FUNCTIONS
 #define ESP_FUNCTIONS
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver-T 5.88";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.90a";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 
 char Ublox_type[20]="Ublox unknown...";
@@ -17,6 +17,7 @@ bool SoftAP_connection = false;
 bool GPS_Signal_OK = false;
 bool long_push = false;
 bool Field_choice = false;
+bool reset_boot =false;
 int NTP_time_set = 0;
 int Gps_time_set = 0;
 bool Shut_down_Save_session = false;
@@ -156,56 +157,22 @@ void print_wakeup_reason(){
   switch(wakeup_reason)
   {    
     case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO");
-                                 pinMode(WAKE_UP_GPIO,INPUT_PULLUP);
-                                 while(millis()<200){
-                                    if (digitalRead(WAKE_UP_GPIO)==1){
-                                      esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0); //was 39  1 = High, 0 = Low
-                                      go_to_sleep(TIME_TO_SLEEP);
-                                      break;
-                                      }
-                                    }
-                                 rtc_gpio_deinit(GPIO_NUM_xx);//was 39  
-                                 reed=1;   
-                                 esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_ALL);
-                                 Boot_screen();
                                  break;
     case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); 
                                  break;
     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer");                           
-                                  analog_mean = analogRead(PIN_BAT);
-                                  for(int i=0;i<10;i++){
-                                        Update_bat();
-                                        } 
-                                  /*                                     
-                                  if((int)analog_mean>RTC_highest_read){ 
-                                    RTC_highest_read=(int)analog_mean; 
-                                    EEPROM.put(1,RTC_highest_read) ;
-                                    EEPROM.commit();
-                                    RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
-                                    Serial.print("New RTC_highest_read = ");
-                                    Serial.println(RTC_highest_read);
-                                    } 
-                                  */    
-                                  esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0); //was 39  1 = High, 0 = Low
-                                  if(abs(RTC_voltage_bat-RTC_old_voltage_bat)>MINIMUM_VOLTAGE_CHANGE){
-                                    Sleep_screen(RTC_SLEEP_screen);
-                                    RTC_old_voltage_bat=RTC_voltage_bat;
-                                    }
-                                  if(RTC_voltage_bat<MINIMUM_VOLTAGE){
-                                      Boot_screen();
-                                      delay(1000);
-                                      Sleep_screen(RTC_SLEEP_screen);
-                                      esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);
-                                      go_to_sleep(4000);
-                                    }
-                                  go_to_sleep(TIME_TO_SLEEP); //was 4000
                                   break;                               
     case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); 
                                      break;
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); 
                                 break;
-    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); 
-              Boot_screen();
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason);
+              reset_boot=true; 
+              pinMode(WAKE_UP_GPIO,INPUT_PULLUP); 
+              esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);
+              pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
+              esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
+              if ((digitalRead(WAKE_UP_GPIO)==1)&(digitalRead(WAKE_UP_GPIOyy)==1)) {go_to_sleep(TIME_TO_SLEEP);}
               break;
     }
 }
@@ -215,15 +182,17 @@ void go_to_sleep(uint64_t sleep_time){
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
   Ublox_off();
-  Serial.println("Setup ESP32 to sleep for every " + String((int)sleep_time) + " Seconds");
+  Serial.println("Setup ESP32 to sleep for ever, waking up only with ext.signal ! ");
   Serial.println("Going to sleep now");
   Serial.flush();
-  delay(3000);
+  if(reset_boot==0) {delay(5000);}
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);//flash in deepsleep, CS stays HIGH!!
   digitalWrite(TFT_BL, LOW); 
   tft.writecommand(ST7789_DISPOFF);// Switch off the display
   tft.writecommand(ST7789_SLPIN);// Sleep the display driver
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);
+  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
   gpio_deep_sleep_hold_en();
   esp_deep_sleep_start();  
 }

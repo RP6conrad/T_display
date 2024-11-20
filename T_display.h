@@ -16,7 +16,13 @@ Center: horizontally & vertically
 Flip: horizontally 
 */
 // https://tchapi.github.io/Adafruit-GFX-Font-Customiser/ used for extracting only needed digits and decimal point !!
+#include "Fonts/Aerial20.h"
+#include "Fonts/Aerial30.h"
+#include "Fonts/NotoSansBold15.h"
+#include "Fonts/Noto_Sans_Bold26.h"
 // FreeFonts from Adafruit_GFX
+#include "Fonts/FreeSansBold60pt7b.h"
+//#include "Fonts/SansSerif_bold_96_nr.h"
 /*
 #include "Fonts/FreeMonoBold8pt7b.h"//gebruikt
 #include "Fonts/FreeMonoBold9pt7b.h"//gebruikt
@@ -50,20 +56,32 @@ Flip: horizontally
 */
 #include "Fonts/BitmapSurfbuddies.h"
 #define BOOT_SCREEN 0
-#define STATS1 1
-#define STATS2 2
-#define STATS3 3
-#define STATS4 4
-#define STATS5 5
-#define STATS6 6    //simon stat screen
-#define STATS7 7    //bar graph screen 10s run
-#define STATS8 8
+#define STATS1 49
+#define STATS2 50
+#define STATS3 51
+#define STATS4 52
+#define STATS5 53
+#define STATS6 54    //simon stat screen
+#define STATS7 55    //bar graph screen 10s run
+#define STATS8 56
+#define RUNS_STAT 57
+#define STATSA 65  //asci code for A
+#define SPEED1 49
+#define SPEED2 50
+#define SPEED3 51
+#define SPEED4 52
+#define SPEED5 53
+#define SPEED6 54
+#define SPEED7 55
+#define SPEED8 56
+#define SPEED9 57
+
+
 #define AVG_10S 9
 #define SPEED 10
 #define WIFI_ON 11
 #define WIFI_STATION 12
 #define WIFI_SOFT_AP 13
-#define SPEED2 14
 #define TROUBLE 15
 #define GPS_INIT_SCREEN 16
 //#define TFT_WIDTH  135    = in User_setup.h
@@ -115,19 +133,15 @@ extern GPS_speed M500;
 extern Alfa_speed A250;
 extern Alfa_speed A500;
 extern Alfa_speed a500;
+extern GPS_time S10;
 extern GPS_time S1800;
 extern GPS_time S3600;
 extern TFT_eSPI tft;
-extern TFT_eSprite img;
+extern TFT_eSprite sprite;
 extern int cursor_x,cursor_y;
 const char* gpsChip(int longname);
-void Boot_screen(void);//old
 void Boot_Screen1(void);
-//void Boot_Screen2(float Mbytes);
-void Fill_Screen(int color);
-//void GPS_Screen(void);
 void Off_screen(int choice);
-void Sleep_screen(int choice);
 void Update_screen(int screen);
 void Bat_level(int X_offset,int Y_offset);
 void Bat_level_Simon(int offset);
@@ -135,9 +149,11 @@ void Sat_level(int offset);
 void time_print(int time);
 int Time(int offset) ;
 void Sats_level(int offset);
-int DateTimeRtc(int offset) ;
 int update_time(void);
 void InfoBar(int offset);
-void InfoBarRtc(int offset);
 void M8_M10(int offset);
+void Stats_4lines(String Message1, String Message2, String Message3, String Message4, float Value1, float Value2, float Value3, float Value4);
+void Best_5_runs(String Message, GPS_speed M) ;
+void Best_5_runs_S(String Message, GPS_speed S) ;
+ 
 #endif

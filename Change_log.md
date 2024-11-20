@@ -1,3 +1,8 @@
+  ###Changes SW 5.90
+* Added more stat screens
+* After boot from Power on, direct deepsleep. This to prevent bootloop when lipo goes in to protection. 
+* Can be override when reed switch is on @ boot !!!
+
   ###Changes SW5.88
 * Deep sleepcurrent 8mA -> 1mA, by switch off displaydriver in deepsleep  
   ###Changes SW5.87
