@@ -138,9 +138,10 @@ extern GPS_time S1800;
 extern GPS_time S3600;
 extern TFT_eSPI tft;
 extern TFT_eSprite sprite;
+extern TFT_eSprite sprite2;
 extern int cursor_x,cursor_y;
 const char* gpsChip(int longname);
-void Boot_Screen1(void);
+void Boot_Screen1(float lipo_voltage);
 void Off_screen(int choice);
 void Update_screen(int screen);
 void Bat_level(int X_offset,int Y_offset);
@@ -155,5 +156,6 @@ void M8_M10(int offset);
 void Stats_4lines(String Message1, String Message2, String Message3, String Message4, float Value1, float Value2, float Value3, float Value4);
 void Best_5_runs(String Message, GPS_speed M) ;
 void Best_5_runs_S(String Message, GPS_speed S) ;
+void Best_5_Alfas_A(String Message, Alfa_speed A);
  
 #endif

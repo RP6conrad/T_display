@@ -25,15 +25,13 @@
 #include "OTA_server.h" 
 #include <esp_task_wdt.h>
 #include "freertos/task.h"//added V3
-#include <driver/rtc_io.h>
-#include <driver/gpio.h>
 #include <lwip/apps/sntp.h>
 #include <esp32-hal.h>
 #include <time.h>
 #include <EEPROM.h>
 #include "Definitions.h"
-//#include <LITTLEFS.h>
 #include <LittleFS.h>
+#include "rom/rtc.h"
 #include "ESP_functions.h"
 
 const char* ssid = config.ssid; //WiFi SSID
@@ -50,42 +48,29 @@ extern int cursor_x,cursor_y;
 
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
+TFT_eSprite sprite2 = TFT_eSprite(&tft);
 void setup() { 
+  setCpuFrequencyMhz(10);
+  Serial.begin(115200);
+  Serial.print("Actual CPU freq @ boot= "); Serial.println (getCpuFrequencyMhz());
   EEPROM.begin(EEPROM_SIZE);
   config.ublox_type = EEPROM.read(0);
-  Serial.begin(115200);
   Serial.println("setup Serial");
   Serial.println("Serial Txd is on pin: "+String(TX));
   Serial.println("Serial Rxd is on pin: "+String(RX));
+  print_reset_reason(rtc_get_reset_reason(0));//Find out the reset reason, if no SW-reset-> back to deep sleep !
   print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
-  Boot_Screen1();
-  
+  analog_mean = analogRead(PIN_BAT);//fill FIR filter
+  for(int i=0;i<(1/FIR_BAT);i++){Update_bat();}
+  if(RTC_voltage_bat> (MINIMUM_VOLTAGE+0.2)){setCpuFrequencyMhz(40);}
+  else {};
+  Serial.print("Actual CPU freq @ Boot_screen= "); Serial.println (getCpuFrequencyMhz());
+  Boot_Screen1(RTC_voltage_bat); 
   Serial.println(F("TFT Initialized"));
-  /*
-  EEPROM.get(1,RTC_highest_read);
-  if((RTC_highest_read<STARTVALUE_HIGHEST_READ)|(RTC_highest_read>MAXVALUE_HIGHEST_READ)){
-    EEPROM.put(1,STARTVALUE_HIGHEST_READ) ;
-    EEPROM.commit();
-    RTC_highest_read=STARTVALUE_HIGHEST_READ;
-    Serial.println("Eeprom highest read set to starting value !!");
-    }
-  RTC_calibration_bat= FULLY_CHARGED_LIPO_VOLTAGE/RTC_highest_read;
-  Serial.print("RTC_calibration_bat EEPROM = ");
-  */
   Serial.println(RTC_calibration_bat);
   Serial.println("Configuring WDT...");
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
-  //SPI.begin(SPI_CLK, SPI_MISO, SPI_MOSI, ELINK_SS); //SPI is used for SD-card and for E_paper display !
-  //print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
-  analog_mean = analogRead(PIN_BAT);//fill FIR filter
- //sometimes after OTA hangs here ???
-  pinMode(UBLOX_POWER1, OUTPUT);//Power beitian //default drive strength 2, only 2.7V @ ublox gps
-  pinMode(UBLOX_POWER2, OUTPUT);//Power beitian
-  pinMode(UBLOX_POWER3, OUTPUT);//Power beitiansee
-  rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO1,GPIO_DRIVE_CAP_3);// https://www.esp32.com/viewtopic.php?t=5840
-  rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO2,GPIO_DRIVE_CAP_3);//3.0V @ ublox gps current 50 mA
-  gpio_set_drive_capability(UBLOX_GPIO3,GPIO_DRIVE_CAP_3);//rtc_gpio_ necessary, if not no output on RTC_pins 25 en 26, 13/3/2022
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);//for T-display, no need to wake up with timer !!!
   pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
   esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
@@ -105,14 +90,13 @@ void setup() {
       int total_Mbytes = LITTLEFS.totalBytes()/(1024*1024);
       int used_Mbytes = LITTLEFS.usedBytes()/(1024*1024);
       freeSpace=total_Mbytes-used_Mbytes;
-      //float Mbytes = (total_bytes-used_bytes)/1024.0/1024.0;
       Serial.print(total_Mbytes);
       Serial.println(" Mbytes");
       Serial.print("Free space left= ");
       Serial.print(total_Mbytes-used_Mbytes);
       Serial.println(" Mbytes");
       LittleFS_OK = true;
-      Boot_Screen1();
+      //Boot_Screen1(RTC_voltage_bat);
       loadConfiguration(filename, filename_backup, config);  // load config file
       Serial.print(F("Print config file..."));
       if (sdOK|LittleFS_OK) printFile(filename); 
@@ -124,7 +108,6 @@ void setup() {
         uint64_t totalMBytes=SD.totalBytes() / (1024 * 1024);
         uint64_t usedMBytes=SD.usedBytes() / (1024 * 1024);
         freeSpace=totalMBytes-usedMBytes;
-        Boot_Screen1();
         Serial.printf("SD Card Size: %lluMB\n", cardSize); 
         Serial.printf("SD Total bytes: %lluMB\n", totalMBytes); 
         Serial.printf("SD Used bytes: %lluMB\n", usedMBytes); 
@@ -136,6 +119,8 @@ void setup() {
         printFile(filename); 
   } 
   WiFi.onEvent(OnWiFiEvent);
+  setCpuFrequencyMhz(240);
+  Serial.print("Actual CPU freq @ Wifi.begin() = "); Serial.println (getCpuFrequencyMhz());
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   Serial.print("T5 MAC adress: ");
@@ -146,13 +131,10 @@ void setup() {
   Search_for_wifi(); 
    if ((WiFi.status() != WL_CONNECTED)&(ap_mode==false)) {
     WiFi.disconnect();
-   // WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
-   // WiFi.setHostname(hostname); //define hostname
     WiFi.begin(ssid2, password2);
     actual_ssid=ssid2;  
     wifi_search=10;
    }
-  //if(ap_mode==false) {
   if ((WiFi.status() != WL_CONNECTED)&(ap_mode==false)) { 
     Serial.println("search SSID2");
     Search_for_wifi();
@@ -253,7 +235,6 @@ void taskOne( void * parameter )
           Short_push35.button_count=0;
           }
         config.field_actual=config.speed_screen[Short_push35.button_count];
-        //Serial.print("config.field_actual ");Serial.println(config.field_actual);
         }
       }
    Field_choice=Short_push35.long_pulse;//10s wachttijd voor menu field keuze....//bug sw 5.54 !!
@@ -268,9 +249,7 @@ void taskOne( void * parameter )
         printLocalTime();
         NTP_time_set=false;
         if(!GPS_OK) {
-          //Update_screen(GPS_INIT_SCREEN); 
           GPS_OK = setupGPS();
-          //Update_screen(GPS_INIT_SCREEN); 
         }
        }
    if((WiFi.status() == WL_CONNECTED)|SoftAP_connection){
@@ -409,7 +388,6 @@ void taskTwo( void * parameter)
       last_millis = millis();
     } 
     if (stat_count>config.screen_count)stat_count=0;//screen_count = 2
-    Update_bat();
     if(RTC_voltage_bat<MINIMUM_VOLTAGE) low_bat_count++;
     else low_bat_count=0;
     if(long_push==true){
@@ -431,42 +409,21 @@ void taskTwo( void * parameter)
     if (Refresh_Screen) {
       Refresh_Screen = 0;
       if((!Wifi_on)&(!Time_Set_OK)) {Update_screen(GPS_INIT_SCREEN);counter=1;}
-      else if(millis()%12000>8000) { Update_screen(config.stat_screen[stat_count]);}//(GPS_Signal_OK==false) wifi on
-      else if (millis() % 12000 < 4000) {Update_screen(SPEED);}
+      //else if(millis()%12000>8000) { Update_screen(config.stat_screen[stat_count]);}//(GPS_Signal_OK==false) wifi on
+      //else if (millis() % 12000 < 4000) {Update_screen(SPEED);}
       else if(GPS_Signal_OK==false) Update_screen(WIFI_ON);
       else if(Time_Set_OK==false) Update_screen(WIFI_ON);
       else if((gps_speed/1000.0f<config.stat_speed)&(Field_choice==false)){
             Update_screen(config.stat_screen[stat_count]);
-            //Update_screen(STATS5);
             }
       else {       
             Update_screen(SPEED);
             stat_count=0;
             }
       if((config.field==0)&(gps_speed/1000.0f>config.stat_speed)){
-      // tft.writecommand(ST7789_DISPOFF);// Switch off the display
-      // tft.writecommand(ST7789_SLPIN);// Sleep the display driver
         digitalWrite(TFT_BL, LOW); }
       else {
-        //tft.writecommand(ST7789_DISPON);
         digitalWrite(TFT_BL, HIGH); }
     }    
-    /*
-    else if(millis()<2000)Update_screen(BOOT_SCREEN);
-    else if(trouble_screen) Update_screen(TROUBLE);
-    else if(GPS_Signal_OK==false) Update_screen(WIFI_ON);
-    else if(Time_Set_OK==false) Update_screen(WIFI_ON);
-    #if defined (GPIO12_ACTIF)
-    else if(Short_push12.long_pulse){Update_screen(config.gpio12_screen[GPIO12_screen]);}//heeft voorrang, na drukken GPIO_pin 12, 10 STAT4 scherm !!!
-    #endif
-    
-    else if((gps_speed/1000.0f<config.stat_speed)&(Field_choice==false)){
-          Update_screen(config.stat_screen[stat_count]);
-          }
-    else {
-          Update_screen(SPEED);
-          stat_count=0;
-          }
-    */      
   }
 }

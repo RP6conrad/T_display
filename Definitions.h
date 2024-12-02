@@ -39,6 +39,7 @@
 #define TXD2 33 //green is Rx Ublox, Beitian green is Rx
 #define ADC_EN  14  //ADC_EN is the ADC detection enable port
 #define PIN_BAT 34 //adc for bat voltage
+#define FIR_BAT 0.02 //FIR filter factor for bat measurement
 #define UBLOX_POWER1 25
 #define UBLOX_RTC_GPIO1 GPIO_NUM_25
 #define UBLOX_POWER2 26

@@ -32,7 +32,7 @@ void Bat_level_Simon(int offset) {
   if (bat_perc < 5) {sprite.fillRoundRect(offset + posX - 0.25 * batW + line, posY + 0.25 * batW + line + 2 * (segL + 1), segW, segL,0, TFT_BLACK);}
 
   if (bat_perc < 100) sprite.setCursor(120,114);//was 193
-  else sprite.setCursor(104,114);//was 184
+  else sprite.setCursor(120,114);//was 184
   
   sprite.print(RTC_voltage_bat+0.04,1);
   sprite.print("V ");
@@ -43,7 +43,10 @@ void Sats_level(int offset) {
   int posX = 95;//was 176
   int posY = 114;  //-(circelL+2*circelS);
   int satnum = ubxMessage.navPvt.numSV;
-  sprite.drawBitmap( posX, posY,ESP_Sat_22, 22, 22,TFT_BLACK,TFT_GREEN);
+  int color = TFT_GREEN;
+  if (satnum < 5){color=TFT_YELLOW;}
+  if (satnum < 2) {color=TFT_RED;}
+  sprite.drawBitmap( posX, posY,ESP_Sat_22, 22, 22,TFT_BLACK,color);
   sprite.setCursor(posX - 25, posY);//tft.setCursor(posX - (satnum < 10 ? 10 : 19), posY);
   sprite.print(ubxMessage.navPvt.numSV);
 }
@@ -113,7 +116,7 @@ const char* gpsChip(int longname) {
     sprite.setCursor(0,0);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
-    sprite.setTextColor(TFT_GREEN);
+    sprite.setTextColor(TFT_WHITE);
     sprite.print(Message1);sprite.setCursor(STAT4_ROW2,0);sprite.println(Value1,1);
     sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PINK);
     sprite.print(Message2);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value2,1);
@@ -131,6 +134,7 @@ void Best_5_runs(String Message, GPS_speed M) {
   sprite.setCursor(0, 0);
   for (int i = 0; i < 5; i++) {
     sprite.loadFont(Aerial20);
+    sprite.setTextColor(TFT_WHITE);
     sprite.print(Message);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
@@ -151,6 +155,7 @@ void Best_5_runs_S(String Message, GPS_time S) {
   sprite.setCursor(0, 0);
   for (int i = 0; i < 5; i++) {
     sprite.loadFont(Aerial20);
+    sprite.setTextColor(TFT_WHITE);
     sprite.print(Message);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
@@ -165,26 +170,58 @@ void Best_5_runs_S(String Message, GPS_time S) {
   }
   sprite.pushSprite(0,0);
 }
-void Boot_Screen1(void){
+void Best_5_Alfas_A(String Message, Alfa_speed A) {
+  sprite.unloadFont();
+  sprite.fillSprite(TFT_BLACK);
+  sprite.setCursor(0, 0);
+  for (int i = 0; i < 5; i++) {
+    sprite.loadFont(Aerial20);
+    sprite.setTextColor(TFT_WHITE);
+    sprite.print(Message);
+    sprite.unloadFont();
+    sprite.loadFont(Aerial30);
+    sprite.print(A.avg_speed[9 - i] * calibration_speed, 1);
+    sprite.unloadFont();
+    sprite.loadFont(Aerial20);
+    sprite.print("@");
+    sprite.unloadFont();
+    sprite.loadFont(Aerial30);
+    sprite.printf("%02d:%02d\n",A.time_hour[9 - i],A.time_min[9 - i]);
+    sprite.drawLine(0, sprite.getCursorY() - 6, 240, sprite.getCursorY() - 6, TFT_BLUE);
+  }
+  sprite.pushSprite(0,0);
+}
+void Boot_Screen1(float lipo_voltage){
   if((!sdOK)&(!LittleFS_OK)){
     tft.init();           // Initialize ST7789 240x135
     tft.setRotation(1);
     tft.fillScreen(TFT_BLACK);
     sprite.createSprite(TFT_HEIGHT,TFT_WIDTH);
+    sprite2.createSprite(50, 50);
+    //sprite2.setSwapBytes(1);
     sprite.fillScreen(TFT_BLACK);
     pinMode(TFT_BL, OUTPUT);      // TTGO T-Display enable Backlight pin 4
     digitalWrite(TFT_BL, HIGH);   // T-Display turn on Backlight
     sprite.setCursor(0, 0);
     sprite.setTextWrap(false);
-    sprite.setTextColor(TFT_YELLOW,TFT_BLACK);
+    sprite.setTextColor(TFT_YELLOW);
     sprite.unloadFont();
     sprite.loadFont(Noto_Sans_Bold26);
     //sprite.setTextFont(4);
     sprite.println("T-Display ESP-GPS");
+    int color= TFT_GREEN;
+    if(lipo_voltage<MINIMUM_VOLTAGE+0.5)color=TFT_YELLOW;
+    if(lipo_voltage<MINIMUM_VOLTAGE+0.3)color=TFT_RED;
+    sprite.setTextColor(color);
+    sprite.printf("Bat: %.2f",lipo_voltage);
+    sprite.setCursor(0, 110);
+    sprite.print(SW_version);
+    sprite.pushSprite(0,0);
     for (int pos=0;pos<240;pos++){
-      sprite.drawBitmap( pos, 60,ESP_GPS_logo,48 , 48,TFT_BLACK,TFT_RED);
-      sprite.drawLine(pos,60,pos,60+48,TFT_BLACK);
-      sprite.pushSprite(0,0);
+      sprite2.fillRect(0, 0, 50, 48, TFT_BLACK);  // drawRect
+      sprite2.drawBitmap(2, 0, ESP_GPS_logo, 48, 48, TFT_BLACK, TFT_RED);
+      sprite2.pushSprite(pos,60);
+      delay(5);
       }
     }
     else{
@@ -210,7 +247,7 @@ sprite.loadFont(Noto_Sans_Bold26);
 sprite.setCursor(0,0);
 sprite.println("ESP-GPS saving");
 sprite.println("Saving session");
- float session_time = (millis() - start_logging_millis) / 1000;
+float session_time = (millis() - start_logging_millis) / 1000;
 sprite.print("Time: ");sprite.print(session_time, 0);sprite.println(" s");
 sprite.print("AVG: ");sprite.println(RTC_avg_10s, 2);
 sprite.print("Dist: ");sprite.println(Ublox.total_distance / 1000, 0);
@@ -219,11 +256,6 @@ sprite.pushSprite(0,0);
 
 //****************************************************************************************************************************************  
 void Update_screen(int screen){
-  /*
-  static int Old_Screen;
-  if(Old_Screen!=screen)tft.fillScreen(TFT_BLACK);  
-  Old_Screen=screen;
-  */
   if(screen==WIFI_STATION){
     int Mbytes=freeSpace;
     sprite.fillSprite(TFT_BLACK);
@@ -273,9 +305,6 @@ void Update_screen(int screen){
     sprite.setTextColor(TFT_CYAN);
     InfoBar(0);
     sprite.pushSprite(0,0);
-
-    //if(millis()%6000<3000)digitalWrite(TFT_BL, HIGH);   // T-Display turn on Backlight
-    //else digitalWrite(TFT_BL, LOW);   // T-Display turn on Backlight
   } 
 //*************************************************************************************************************************************************
 
@@ -328,7 +357,7 @@ void Update_screen(int screen){
 //*********************************************************************************************************************************************************************
   if(screen==SPEED) {
   sprite.fillSprite(TFT_BLACK);
-  sprite.setTextColor(TFT_PINK);
+  sprite.setTextColor(TFT_WHITE);
   sprite.unloadFont();
   sprite.loadFont(Noto_Sans_Bold26);
   sprite.setCursor(0,0);
@@ -358,23 +387,28 @@ void Update_screen(int screen){
     #define ROW1 60
     #define ROW2 120
     #define ROW3 180
+    #define DIS_WIDTH 240
     sprite.fillSprite(TFT_BLACK);
     sprite.unloadFont();
     sprite.loadFont(Noto_Sans_Bold26);
-    sprite.setTextColor(TFT_PINK);
+    sprite.setTextColor(TFT_WHITE);
     sprite.setCursor(0,0);
     sprite.print("AVG ");sprite.setCursor(ROW1,0);sprite.print(S10.avg_5runs * calibration_speed,1);
     sprite.setCursor(ROW2,0);
     sprite.print("2s ");sprite.setCursor(ROW3,0);sprite.println(S2.display_max_speed * calibration_speed,1);
+    sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PURPLE);
     sprite.print("10sF");sprite.setCursor(ROW1,sprite.getCursorY());sprite.print(S10.display_max_speed * calibration_speed,1);
     sprite.setCursor(ROW2,sprite.getCursorY());
     sprite.print("10sS");sprite.setCursor(ROW3,sprite.getCursorY());sprite.println(S10.display_speed[5] * calibration_speed,1);
+    sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PURPLE);
     sprite.print("Alfa");sprite.setCursor(ROW1,sprite.getCursorY());sprite.print(A500.avg_speed[9] * calibration_speed,1);
     sprite.setCursor(ROW2,sprite.getCursorY());
     sprite.print("NM");sprite.setCursor(ROW3,sprite.getCursorY());sprite.println(M1852.display_max_speed* calibration_speed,1);
+    sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PURPLE);
     sprite.print("Dis");sprite.setCursor(ROW1,sprite.getCursorY());sprite.print(Ublox.total_distance / 1000.0/1000.0, 1);
     sprite.setCursor(ROW2,sprite.getCursorY());
     sprite.print("1h");sprite.setCursor(ROW3,sprite.getCursorY());sprite.println(S3600.display_max_speed* calibration_speed,1);
+    sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PURPLE);
     InfoBar(0);
     sprite.pushSprite(0,0);
   }
@@ -382,9 +416,11 @@ if (screen == STATS2) {
     Stats_4lines("Dist: ", "1852m: ", "1hour: ", "Alfa: ", Ublox.total_distance / 1000000, M1852.display_max_speed * calibration_speed, S3600.display_max_speed * calibration_speed, A500.avg_speed[9] * calibration_speed);
   }
 if (screen == STATS3) {
+    Stats_4lines("100m: ", "250m: ", "500m: ", "2s: ",M100.display_max_speed * calibration_speed, M250.display_max_speed * calibration_speed,M500.display_max_speed * calibration_speed,S2.display_max_speed * calibration_speed);
+  }  
+if (screen == STATS4) {
     Stats_4lines("100m: ", "250m: ", "500m: ", "Alfa: ",M100.display_max_speed * calibration_speed, M250.display_max_speed * calibration_speed,M500.display_max_speed * calibration_speed, A500.avg_speed[9] * calibration_speed);
   }
-if(screen==STATS4) {Best_5_runs("500m: ", M500) ;}
 if(screen==STATS5) {Best_5_runs_S("Run: ", S10) ;}
 if (screen == STATS6) {
     #define STAT_ROW1 60
@@ -449,6 +485,8 @@ if (screen == STATS6) {
     InfoBar(0);
     sprite.pushSprite(0,0); 
   }
+if(screen==STATS7) {Best_5_runs("500m: ", M500) ;}  
+if(screen==STATS8) {Best_5_Alfas_A("Alfa: ", A500) ;}  
 }  
 #else
 

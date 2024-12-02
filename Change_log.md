@@ -2,6 +2,9 @@
 * Added more stat screens
 * After boot from Power on, direct deepsleep. This to prevent bootloop when lipo goes in to protection. 
 * Can be override when reed switch is on @ boot !!!
+* If sw-reset, normal boot
+* Adapt FIR filter bat reading 0.1 -> 0.02
+* Added GPSTC posting in webserver
 
   ###Changes SW5.88
 * Deep sleepcurrent 8mA -> 1mA, by switch off displaydriver in deepsleep  

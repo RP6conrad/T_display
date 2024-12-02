@@ -1,7 +1,8 @@
 #ifndef ESP_FUNCTIONS
 #define ESP_FUNCTIONS
+
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver-T 5.90a";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.90";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 
 char Ublox_type[20]="Ublox unknown...";
@@ -74,6 +75,11 @@ RTC_DATA_ATTR float RTC_alp;
 RTC_DATA_ATTR float RTC_500m;
 RTC_DATA_ATTR float RTC_1h;
 RTC_DATA_ATTR float RTC_mile;
+RTC_DATA_ATTR float RTC_avg_10s_knots;
+RTC_DATA_ATTR float RTC_max_2s_knots;
+RTC_DATA_ATTR float RTC_alp_knots;
+RTC_DATA_ATTR float RTC_1h_knots;
+RTC_DATA_ATTR float RTC_mile_knots;
 RTC_DATA_ATTR float RTC_R1_10s;
 RTC_DATA_ATTR float RTC_R2_10s;
 RTC_DATA_ATTR float RTC_R3_10s;
@@ -157,9 +163,9 @@ void print_wakeup_reason(){
   switch(wakeup_reason)
   {    
     case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO");
-                                 break;
+                                 reset_boot=false;break;
     case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); 
-                                 break;
+                                 reset_boot=false;break;
     case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer");                           
                                   break;                               
     case ESP_SLEEP_WAKEUP_TOUCHPAD : Serial.println("Wakeup caused by touchpad"); 
@@ -167,16 +173,43 @@ void print_wakeup_reason(){
     case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); 
                                 break;
     default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason);
+              /*
               reset_boot=true; 
               pinMode(WAKE_UP_GPIO,INPUT_PULLUP); 
-              esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);
               pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
-              esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
               if ((digitalRead(WAKE_UP_GPIO)==1)&(digitalRead(WAKE_UP_GPIOyy)==1)) {go_to_sleep(TIME_TO_SLEEP);}
+              */
               break;
     }
 }
-
+void print_reset_reason(int reason)
+{
+  switch ( reason)
+  {
+    /*
+    case 1 : Serial.println ("POWERON_RESET"); break;          //<1,  Vbat power on reset
+    case 3 : Serial.println ("SW_RESET");break;               //<3,  Software reset digital core
+    case 4 : Serial.println ("OWDT_RESET");break;             //<4,  Legacy watch dog reset digital core
+    case 5 : Serial.println ("DEEPSLEEP_RESET");break;        //<5,  Deep Sleep reset digital core
+    case 6 : Serial.println ("SDIO_RESET");break;             //<6,  Reset by SLC module, reset digital core
+    case 7 : Serial.println ("TG0WDT_SYS_RESET");break;       //<7,  Timer Group0 Watch dog reset digital core
+    case 8 : Serial.println ("TG1WDT_SYS_RESET");break;       //<8,  Timer Group1 Watch dog reset digital core
+    case 9 : Serial.println ("RTCWDT_SYS_RESET");break;       //<9,  RTC Watch dog Reset digital core
+    case 10 : Serial.println ("INTRUSION_RESET");break;       //<10, Instrusion tested to reset CPU
+    case 11 : Serial.println ("TGWDT_CPU_RESET");break;       //<11, Time Group reset CPU
+    case 12 : Serial.println ("SW_CPU_RESET");break;          //<12, Software reset CPU
+    case 13 : Serial.println ("RTCWDT_CPU_RESET");break;      //<13, RTC Watch dog Reset CPU
+    case 14 : Serial.println ("EXT_CPU_RESET");break;         //<14, for APP CPU, reseted by PRO CPU
+    case 15 : Serial.println ("RTCWDT_BROWN_OUT_RESET");break;//<15, Reset when the vdd voltage is not stable 
+    case 16 : Serial.println ("RTCWDT_RTC_RESET");break;      //<16, RTC Watch dog reset digital core and rtc module
+    */
+    case 12 : Serial.println ("SW_CPU_RESET");break;          /**<12, Software reset CPU*/        
+    default : Serial.println ("NO_MEAN, always back to sleep !!!");reset_boot=true; 
+              pinMode(WAKE_UP_GPIO,INPUT_PULLUP); 
+              pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
+              if ((digitalRead(WAKE_UP_GPIO)==1)&(digitalRead(WAKE_UP_GPIOyy)==1)) {go_to_sleep(TIME_TO_SLEEP);}
+  }
+}
 void go_to_sleep(uint64_t sleep_time){
   deep_sleep=true;
   WiFi.disconnect(true);
@@ -216,6 +249,11 @@ void Shut_down(void){
             RTC_R3_10s=S10.avg_speed[7]*calibration_speed;
             RTC_R4_10s=S10.avg_speed[6]*calibration_speed;
             RTC_R5_10s=S10.avg_speed[5]*calibration_speed;
+            RTC_max_2s_knots= S2.avg_speed[9]*1.9438/1000;
+            RTC_avg_10s_knots=S10.avg_5runs*1.9438/1000;
+            RTC_1h_knots=S3600.display_max_speed*1.9438/1000;               
+            RTC_mile_knots=M1852.display_max_speed*1.9438/1000;
+            RTC_alp_knots=A500.display_max_speed*1.9438/1000;
             if(config.logTXT){
               Session_info(Ublox);
               Session_results_S(S2);
@@ -239,9 +277,59 @@ void Shut_down(void){
         RTC_old_voltage_bat=0; //to force refresh the sleep screen when shutting down !!!   
         go_to_sleep(5);//got to sleep after 5 s, this to prevent booting when GPIO39 is still low !     
 }
+void GPSTC_info(char *GPSTC_post) {
+  char tekst[160] ="<html><hr><h2>GPS Team Challenge Category Results:</h2>\r";
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<h3>Date: %d-%d-%d</h3>\r",RTC_year,RTC_month,RTC_day);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<table cellpadding=\"10\" style=\"text-align: right;\"><tr style=\"text-align: center;\"><th>Category</th><th>Speed (kn)</th><th>Speed (km/h)</th></tr>\r");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>2 sec</td><td><b>%.3f  </b></td><td>%.3f</td></tr>\r",RTC_max_2s_knots,RTC_max_2s);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>5*10 sec</td><td><b>%.3f  </b></td><td>%.3f</td></tr>\r",RTC_avg_10s_knots,RTC_avg_10s);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>1 hour</td><td><b>%.3f  </b></td><td>%.3f</td></tr>\r",RTC_1h_knots,RTC_1h);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>alfa500</td><td><b>%.3f  </b></td><td>%.3f</td></tr>\r",RTC_alp_knots,RTC_alp);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>1852 m</td><td><b>%.3f  </b></td><td>%.3f</td></tr>\r",RTC_mile_knots,RTC_mile);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<tr><td>Distance</td><td><b>%.3f  </b></td><td>km</td></tr>\r",RTC_distance);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<form method=\"POST\" action=\"https://gpsteamchallenge.com.au/sailor_session/post\"><input type=\"hidden\" name=\"load_from_post\" value=\"true\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"date\" value=\"%d-%02d-%02d\">",RTC_year,RTC_month,RTC_day);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"2_sec_peak\" value=\"%.3f\">",RTC_max_2s_knots);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"2_sec_peak_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"5x10\" value=\"%.3f\">",RTC_avg_10s_knots);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"5x10_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"1_hour\" value=\"%.3f\">",RTC_1h_knots);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"1_hour_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"alpha_500\" value=\"%.3f\">",RTC_alp_knots);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"alpha_500_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"nautical_mile\" value=\"%.3f\">",RTC_mile_knots);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"nautical_mile_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"distance\" value=\"%.3f\">",RTC_distance);
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"hidden\" name=\"distane_calc_method\" value=\"D\">");
+  strcat(GPSTC_post, tekst);
+  sprintf(tekst,"<input type=\"submit\" name=\"Submit\" value=\"Submit this session to the GPS Team Challenge website\"></form>\r</html>");
+  strcat(GPSTC_post, tekst);
+}
 void Update_bat(void){
     analog_bat = analogRead(PIN_BAT);
-    analog_mean=analog_bat*0.1+analog_mean*0.9;
+    analog_mean=analog_bat*FIR_BAT+analog_mean*(1-FIR_BAT);
     RTC_voltage_bat=analog_mean*RTC_calibration_bat/1000;
 }
 void printLocalTime(){

@@ -241,6 +241,12 @@ void SD_archive_list(void) {
 void SD_archive_file(void) {
   SD_dir(2);
 }
+void GPSTC_info(char* GPSTC_post );
+void GPSTC_Upload(void){
+  char gpstc_post[2000]="";
+  GPSTC_info(gpstc_post);
+  server.sendContent(gpstc_post);
+}
 //Initial page of the server web, list directory and give you the chance of deleting and uploading
 void SD_dir(int archive) {
   if (sdOK | LittleFS_OK) {
@@ -438,7 +444,7 @@ void handleConfigUpload() {
     doc["speed_field"] = server.arg("speed_field").toInt();
     doc["speed_large_font"] = server.arg("speed_large_font").toInt();
     doc["bar_length"] = server.arg("bar_length").toInt();
-    doc["stat_screens"] = server.arg("stat_screens").toInt();
+    doc["stat_screen"] = server.arg("stat_screen");
     doc["Stat_screens_time"] = server.arg("Stat_screens_time").toInt();
     doc["stat_speed"] = server.arg("stat_speed").toInt();
     doc["start_logging_speed"] = server.arg("start_logging_speed").toInt();
@@ -635,6 +641,7 @@ void OTA_setup(void) {
   server.on("/archive_list", SD_archive_list);
   server.on("/archive_file", SD_archive_file);
   server.on("/upload", File_Upload);
+  server.on("/gpstc",GPSTC_Upload);
   server.on(
     "/fupload", HTTP_POST, []() {
       server.send(200);
