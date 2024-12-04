@@ -2,7 +2,7 @@
 #define ESP_FUNCTIONS
 
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver-T 5.90";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.91";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 
 char Ublox_type[20]="Ublox unknown...";

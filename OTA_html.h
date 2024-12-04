@@ -509,14 +509,6 @@ void html_config(String& webpage){
   webpage += "<input size='8' type='number' required name='sleep_off_screen' min='0' max='1000' value="+String(config.sleep_off_screen)+" step='1'>\n";
   webpage += "</select>\n</td><td>Choice for switch_off (first digit 0 or 1) and sleep_screen (second digit 0 or 1): </td>\n</tr>\n";
   #endif
-  //bat value in % or volt
-  #if defined(_GxDEPG0266BN_H_) 
-  webpage += "<tr><td>bat_choice</td><td>\n<select id='bat_choice' name='bat_choice'>\n";
-  Drop_down_menu(config.bat_choice,0,"Batery value in voltage",webpage);
-  Drop_down_menu(config.bat_choice,1,"Batery value in percentage",webpage);
-  webpage += "</select>\n</td><td>bat_choice: Screen info on battery will be presented in either percentage of voltage.</td>\n</tr>\n"; 
-  #endif     //266BN
-  //#endif    //T5_EPAPER
   //logTXT
   webpage += "<tr><td>logTXT</td><td>\n<select id='logTXT' name='logTXT'>\n";
   if(config.logTXT == 1) webpage += "<option value='1' selected>LOG TXT ON</option>\n"; else webpage += "<option value='1'>LOG TXT ON</option>\n";
@@ -542,14 +534,6 @@ void html_config(String& webpage){
   if(config.logGPX == 1) webpage += "<option value='1' selected>LOG GPX ON</option>\n"; else webpage += "<option value='1'>LOG GPX ON</option>\n";
   if(config.logGPX == 0) webpage += "<option value='0' selected>LOG GPX OFF</option>\n"; else webpage += "<option value='0'>LOG GPX OFF</option>\n";
   webpage += "</select>\n</td><td>logGPX: To save the GPS data in gpx format @ 1Hz, for video overlay or other purposes.</td>\n</tr>\n";  
-  //dynamic_model
-  //if((config.ublox_type==M8_9600BD)|(config.ublox_type==M8_38400BD)){
-  webpage += "<tr><td>dynamic_model</td><td>\n<select id='dynamic_model' name='dynamic_model'>\n";
-  if(config.dynamic_model == 0) webpage += "<option value='0' selected>portable</option>\n"; else webpage += "<option value='0'>portable</option>\n";
-  if(config.dynamic_model == 1) webpage += "<option value='1' selected>sea</option>\n"; else webpage += "<option value='1'>sea</option>\n";
-  if(config.dynamic_model == 2) webpage += "<option value='2' selected>automotive</option>\n"; else webpage += "<option value='2'>automotive</option>\n";
-  webpage += "</select>\n</td><td>dynamic_model: Here you can choose the dynamic model of the Ublox  (0=portable, 1=sea, 2=automotive). As 'sea' has some disadvantages (max speed is limited to 40 knots, only sea-level..), my advice is to stay with 'portable'. </td>\n</tr>\n"; 
- // }
   //timezone
   webpage += "<tr>\n<td>timezone</td><td>\n<select id='timezone' name='timezone' type='number'>\n"; 
   Drop_down_menu(config.timezone,-11.0,"-11 (Pacific/Samoa)",webpage);

@@ -1,3 +1,5 @@
+  ###Changes SW 5.91
+  Bugfix due to memory overflow (sprite2)
   ###Changes SW 5.90
 * Added more stat screens
 * After boot from Power on, direct deepsleep. This to prevent bootloop when lipo goes in to protection. 

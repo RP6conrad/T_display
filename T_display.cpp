@@ -223,6 +223,7 @@ void Boot_Screen1(float lipo_voltage){
       sprite2.pushSprite(pos,60);
       delay(5);
       }
+    sprite2.deleteSprite();  
     }
     else{
       int Mbytes=freeSpace;
