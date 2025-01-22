@@ -2,7 +2,7 @@
 #define ESP_FUNCTIONS
 
 String IP_adress="0.0.0.0";
-const char SW_version[16]="Ver-T 5.91";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+const char SW_version[16]="Ver-T 5.91gamma";//Hier staat de software versie !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 const char E_paper_version[16]="T-Display 16MB";
 
 char Ublox_type[20]="Ublox unknown...";
@@ -222,11 +222,24 @@ void go_to_sleep(uint64_t sleep_time){
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);//flash in deepsleep, CS stays HIGH!!
   digitalWrite(TFT_BL, LOW); 
-  tft.writecommand(ST7789_DISPOFF);// Switch off the display
+  tft.fillScreen(TFT_BLACK);
+  //tft.writecommand(ST7789_DISPOFF);// Switch off the display
   tft.writecommand(ST7789_SLPIN);// Sleep the display driver
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);
-  esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
-  gpio_deep_sleep_hold_en();
+  delay(100);
+ // esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);//reduce sleep current
+ esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_OFF);
+ esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_FAST_MEM, ESP_PD_OPTION_OFF);
+ esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_SLOW_MEM, ESP_PD_OPTION_OFF);//ESP_PD_DOMAIN_XTAL
+ esp_sleep_pd_config(ESP_PD_DOMAIN_XTAL, ESP_PD_OPTION_OFF);//ESP_PD_DOMAIN_RC_FAST
+ //esp_sleep_pd_config(ESP_PD_DOMAIN_MODEM, ESP_PD_OPTION_OFF);// ESP_PD_DOMAIN_MODEM
+ // esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);//for T-display, no need to wake up with timer !!!
+ // pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
+ //  rtc_gpio_pulldown_en(GPIO_NUM_yy);
+ //  rtc_gpio_pullup_dis(GPIO_NUM_yy);
+
+ // esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ANY_HIGH);
+  //adc_power_off();
+  //gpio_deep_sleep_hold_en();
   esp_deep_sleep_start();  
 }
 

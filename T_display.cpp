@@ -92,18 +92,27 @@ const char* gpsChip(int longname) {
     case M8_38400BD:
       return longname ? "M8 38.4Kbd" : "M8";
       break;
+    case M8_115200BD:
+      return longname ? "M8 115.2Kbd" : "M8";
+      break;  
     case M9_9600BD:
       return longname ? "M9 9.6Kbd" : "M9";
       break;
     case M9_38400BD:
       return longname ? "M9 38.4Kbd" : "M9";
       break;
+    case M9_115200BD:
+      return longname ? "M9 115.2Kbd" : "M9";
+      break;  
     case M10_9600BD:
       return longname ? "M10 9.6Kbd" : "M10";
       break;
     case M10_38400BD:
       return longname ? "M10 38.4Kbd" : "M10";
       break;
+    case M10_115200BD:
+      return longname ? "M10 115.2Kbd" : "M10";
+      break;  
     default:
       return "unknown";
       break;
@@ -117,13 +126,13 @@ const char* gpsChip(int longname) {
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
     sprite.setTextColor(TFT_WHITE);
-    sprite.print(Message1);sprite.setCursor(STAT4_ROW2,0);sprite.println(Value1,1);
+    sprite.print(Message1);sprite.setCursor(STAT4_ROW2,0);sprite.println(Value1,2);
     sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PINK);
-    sprite.print(Message2);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value2,1);
+    sprite.print(Message2);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value2,2);
     sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PINK);
-    sprite.print(Message3);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value3,1); 
+    sprite.print(Message3);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value3,2); 
     sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PINK);
-    sprite.print(Message4);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value4,1); 
+    sprite.print(Message4);sprite.setCursor(STAT4_ROW2,sprite.getCursorY());sprite.println(Value4,2); 
     sprite.drawLine(0, sprite.getCursorY() - 4,DIS_WIDTH, sprite.getCursorY() - 4, TFT_PINK); 
     InfoBar(0); 
     sprite.pushSprite(0,0); 
@@ -138,7 +147,7 @@ void Best_5_runs(String Message, GPS_speed M) {
     sprite.print(Message);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
-    sprite.print(M.avg_speed[9 - i] * calibration_speed, 1);
+    sprite.print(M.avg_speed[9 - i] * calibration_speed, 2);
     sprite.unloadFont();
     sprite.loadFont(Aerial20);
     sprite.print("@");
@@ -159,7 +168,7 @@ void Best_5_runs_S(String Message, GPS_time S) {
     sprite.print(Message);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
-    sprite.print(S.avg_speed[9 - i] * calibration_speed, 1);
+    sprite.print(S.avg_speed[9 - i] * calibration_speed, 2);
     sprite.unloadFont();
     sprite.loadFont(Aerial20);
     sprite.print("@");
@@ -180,7 +189,7 @@ void Best_5_Alfas_A(String Message, Alfa_speed A) {
     sprite.print(Message);
     sprite.unloadFont();
     sprite.loadFont(Aerial30);
-    sprite.print(A.avg_speed[9 - i] * calibration_speed, 1);
+    sprite.print(A.avg_speed[9 - i] * calibration_speed, 2);
     sprite.unloadFont();
     sprite.loadFont(Aerial20);
     sprite.print("@");
@@ -193,8 +202,8 @@ void Best_5_Alfas_A(String Message, Alfa_speed A) {
 }
 void Boot_Screen1(float lipo_voltage){
   if((!sdOK)&(!LittleFS_OK)){
-    tft.init();           // Initialize ST7789 240x135
-    tft.setRotation(1);
+    tft.init();           // Initialize ST7789 240x135,  S3 = 320*170
+    tft.setRotation(1);  //screen rotation
     tft.fillScreen(TFT_BLACK);
     sprite.createSprite(TFT_HEIGHT,TFT_WIDTH);
     sprite2.createSprite(50, 50);

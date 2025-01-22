@@ -16,10 +16,11 @@ void Ublox_on(){
   rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO1,GPIO_DRIVE_CAP_3);// https://www.esp32.com/viewtopic.php?t=5840
   rtc_gpio_set_drive_capability(UBLOX_RTC_GPIO2,GPIO_DRIVE_CAP_3);//3.0V @ ublox gps current 50 mA
   gpio_set_drive_capability(UBLOX_GPIO3,GPIO_DRIVE_CAP_3);//rtc_gpio_ necessary, if not no output on RTC_pins 25 en 26, 13/3/2022
-   digitalWrite(UBLOX_POWER1, HIGH); 
-   digitalWrite(UBLOX_POWER2, HIGH);
-   digitalWrite(UBLOX_POWER3, HIGH);
-   delay(20);
+  delay(50);
+  digitalWrite(UBLOX_POWER1, HIGH); 
+  digitalWrite(UBLOX_POWER2, HIGH);
+  digitalWrite(UBLOX_POWER3, HIGH);
+  delay(100);
 }
 void Ublox_off(){
   digitalWrite(UBLOX_POWER1, LOW);
@@ -69,12 +70,13 @@ void Init_ublox(void){
   char M8_38400_bd[20]="Ublox M8 38400bd";
   if(config.ublox_type==M8_9600BD) strcpy(Ublox_type,M8_9600_bd);
   if(config.ublox_type==M8_38400BD) strcpy(Ublox_type,M8_38400_bd);
-  //send configuration data in UBX protocol 
+  /*send configuration data in UBX protocol is already done in SetupGPS()
   Serial.println("Set ublox UBX_OUT ");     
-  for(int i = 0; i < sizeof(UBLOX_UBX_OUT); i++) {                        
-        Serial2.write( pgm_read_byte(UBLOX_UBX_OUT+i) );
+  for(int i = 0; i < sizeof(UBLOX_UBX_BD9600); i++) {                        
+        Serial2.write( pgm_read_byte(UBLOX_UBX_BD9600+i) );
         }
   Ublox_serial2(wait); 
+  */
   if(config.dynamic_model==1){
       Serial.println("Set ublox UBX_SEA ");
       for(int i = 0; i < sizeof(UBX_SEA); i++) {                        
@@ -155,7 +157,7 @@ void Init_ublox(void){
         } 
   Serial2.flush();
   Serial2.begin(38400,SERIAL_8N1, RXD2, TXD2);//in Init_ublox last command is change baudrate to 19200, necessary for 10 Hz  NAV_PVT + NAV_DOP!!!
-  Ublox_serial2(wait);     
+  Ublox_serial2(wait);    
 }
 //Initialization of the ublox M8N  rate with binary commands, choice between 1..4
 void Set_rate_ublox(int rate){
@@ -384,11 +386,9 @@ int Set_GPS_Time(float time_offset){
         unix_timestamp =  mktime(&my_time);//mktime returns local time, so TZ is important !!!
         struct timeval tv = { .tv_sec = (time_t)(unix_timestamp), .tv_usec = 0 };  //clean utc time !!     
         settimeofday(&tv, NULL);
-      
         setenv("TZ",TimeZone,1);
         tzset();     //this works for CET, but TZ string is different for every Land / continent....
-       
-        delay(10);
+        delay(10);//
         if(!getLocalTime(&tmstruct)){
             Serial.println("Can't get time1...");
             return false;
@@ -645,6 +645,28 @@ int Auto_detect_ublox(){
         Serial.println("Ublox M10 @38400bd ");
         }//M10@384000 bd
       }
+    if(config.ublox_type==0){//no ublox @9600 bd detected
+      Serial2.begin(115200,SERIAL_8N1, RXD2, TXD2);// Change baudrate to 38400 for new test
+      Serial2.flush();
+      Serial.println("Check UBX_MON_VER @115200bd ");  //check for 9600 bd ?? 
+      delay(100);  
+      for(int i = 0; i < sizeof(UBX_MON_VER); i++) {                        
+            Serial2.write( pgm_read_byte(UBX_MON_VER+i) );        
+            }           
+      Ublox_serial2(1000); 
+      if(ubxMessage.monVER.hwVersion[3]=='8'){
+        config.ublox_type=M8_115200BD;
+        Serial.println("Ublox M8 @115200bd ");
+        }
+      if(ubxMessage.monVER.hwVersion[3]=='9'){
+        config.ublox_type=M9_115200BD;
+        Serial.println("Ublox M9 @115200bd ");
+        } 
+      if(ubxMessage.monVER.hwVersion[3]=='A'){
+        config.ublox_type=M10_115200BD;
+        Serial.println("Ublox M10 @115200bd ");
+        }
+      }  
     Serial.println(ubxMessage.monVER.hwVersion[3]) ; 
     return config.ublox_type;  
 }

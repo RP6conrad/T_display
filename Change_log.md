@@ -1,5 +1,7 @@
+*  Support for 115200 baud gps modules (Beitian Bx122)
+*  Added two digits after decimal point in some statscreens
   ###Changes SW 5.91
-  Bugfix due to memory overflow (sprite2)
+* Bugfix due to memory overflow (sprite2)
   ###Changes SW 5.90
 * Added more stat screens
 * After boot from Power on, direct deepsleep. This to prevent bootloop when lipo goes in to protection. 

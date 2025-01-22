@@ -371,10 +371,13 @@ void html_config(String& webpage){
   Drop_down_menu(config.ublox_type,255,"AUTO_DETECT @ Boot",webpage);
   Drop_down_menu(config.ublox_type,M8_9600BD,"M8@9600BD",webpage);
   Drop_down_menu(config.ublox_type,M8_38400BD,"M8@38400BD",webpage);
+  Drop_down_menu(config.ublox_type,M8_115200BD,"M8@115200BD",webpage);
   Drop_down_menu(config.ublox_type,M9_9600BD,"M9@9600BD",webpage);
   Drop_down_menu(config.ublox_type,M9_38400BD,"M9@38400BD",webpage);
+  Drop_down_menu(config.ublox_type,M9_115200BD,"M9@115200BD",webpage);
   Drop_down_menu(config.ublox_type,M10_9600BD,"M10@9600BD",webpage);
   Drop_down_menu(config.ublox_type,M10_38400BD,"M10@38400BD",webpage);
+  Drop_down_menu(config.ublox_type,M10_115200BD,"M10@115200BD",webpage);
   webpage += "</select>\n</td><td>GPS type : If auto detect ON, the type of GPS will be identified when booting. </td>\n</tr>\n";
   //sample_rate
   webpage += "<tr>\n<td>sample_rate(Hz)</td><td>\n<select id='sample_rate' name='sample_rate'>";
@@ -384,11 +387,11 @@ void html_config(String& webpage){
   Drop_down_menu(config.sample_rate,5,"5 Hz",webpage);
   Drop_down_menu(config.sample_rate,8,"8 Hz",webpage);
   Drop_down_menu(config.sample_rate,10,"10 Hz",webpage);
-  if(((config.ublox_type == M9_9600BD)|(config.ublox_type == M9_38400BD))|((config.ublox_type == M10_9600BD)|(config.ublox_type == M10_38400BD))&(config.gnss==1)){
+  if(((config.ublox_type == M9_9600BD)|(config.ublox_type == M9_38400BD))|((config.ublox_type == M10_9600BD)|(config.ublox_type == M10_38400BD))){//&(config.gnss==1)
     Drop_down_menu(config.sample_rate,15,"15 Hz",webpage);
     Drop_down_menu(config.sample_rate,20,"20 Hz",webpage);
     }
-  webpage += "</select>\n</td><td>sample_rate: can be 1,2,4,5,8,10 (M8,M9,M10) 15Hz,20Hz (only M9!). The higher, the more accurate, but also the larger the files become!<br> One UBX NavPVT message is 100byte, so at 1Hz this gives a file of 360kb/hour, at 10Hz 3.6Mb/hour!<br>For the M10, max. sample-rate depends on GNSS settings ! 4 GNSS : max  4 Hz, 3 GNSS : max 5 Hz, 2 GNSS : max 10 Hz !</td>\n</tr>\n";
+  webpage += "</select>\n</td><td>sample_rate: can be 1,2,4,5,8,10 (M8,M9,M10) 15Hz,20Hz (only M8 high performance mode or M9!). The higher, the more accurate, but also the larger the files become!<br> One UBX NavPVT message is 100byte, so at 1Hz this gives a file of 360kb/hour, at 10Hz 3.6Mb/hour!<br>For the M10, max. sample-rate depends on GNSS settings ! 4 GNSS : max  4 Hz, 3 GNSS : max 5 Hz, 2 GNSS : max 10 Hz !</td>\n</tr>\n";
   //cpu_freq
   webpage += "<tr>\n<td>CPU freq(MHz)</td><td>\n<select id='CPU_freq' name='CPU_freq'>";
   Drop_down_menu(config.cpu_freq,40,"40 MHz",webpage);
@@ -398,7 +401,7 @@ void html_config(String& webpage){
   webpage += "</select>\n</td><td>CPU freq: can be 40 MHz (2 Hz), 80 MHz (5 Hz),160 MHz(10hz) or 240 MHz(20Hz). Longest battery live @ 40 Mhz ! 20 Hz (M9) needs possible 160 MHz. </td>\n</tr>\n";
   //gnss
   webpage += "<tr><td>gnss</td><td>\n<select id='gnss' name='gnss'>\n";
-  if((config.ublox_type == M8_9600BD)|(config.ublox_type == M8_38400BD)){
+  if((config.ublox_type == M8_9600BD)|(config.ublox_type == M8_38400BD)|(config.ublox_type == M8_115200BD)){
       Drop_down_menu(config.gnss,0,"GPS + BEIDOU",webpage);
       }
   else{ 
@@ -407,7 +410,7 @@ void html_config(String& webpage){
   Drop_down_menu(config.gnss,2,"GPS + GLONAS",webpage);
   Drop_down_menu(config.gnss,3,"GPS + GLONAS + GALILEO",webpage);
   Drop_down_menu(config.gnss,4,"GPS + GALILEO + BEIDOU_B1C",webpage);      
-  if((config.ublox_type == M9_9600BD)|(config.ublox_type == M9_38400BD)|(config.ublox_type == M10_9600BD)|(config.ublox_type == M10_38400BD)){
+  if((config.ublox_type == M9_9600BD)|(config.ublox_type == M9_38400BD)|(config.ublox_type == M9_115200BD)|(config.ublox_type == M10_9600BD)|(config.ublox_type == M10_115200BD)){
     Drop_down_menu(config.gnss,5,"GPS + GLONAS + GALILEO + BEIDOU",webpage);
     }   
   webpage += "</select>\n</td><td>gnss choice, for the M10, 3 or 4 gnss simultanous limits the sample rate ! :<br> M8 (ROM version 2.01) : max 2 GNSS (GPS + GLONAS)<br> M8 (ROM version 3.01) : max 3 GNSS (GPS + GLONAS + GALILEO)<br> M9 : max 4 GNSS (GPS + GLONAS + GALILEO + BEIDOU)<br> M10: max 4 GNSS  (GPS + GLONAS + GALILEO + BEIDOU), but depends on sample-rate !</td>\n</tr>\n";

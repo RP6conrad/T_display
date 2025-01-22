@@ -16,6 +16,9 @@
 #define M10_38400BD 4
 #define M9_9600BD 5
 #define M9_38400BD 6
+#define M8_115200BD 7
+#define M9_115200BD 8
+#define M10_115200BD 9
 #define AUTO_DETECT 0xFF
 /*Pin definitions**************************************************************************/
 // pinouts from https://github.com/Xinyuan-LilyGO/TTGO-T-Display

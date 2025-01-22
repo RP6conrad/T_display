@@ -32,6 +32,7 @@
 #include "Definitions.h"
 #include <LittleFS.h>
 #include "rom/rtc.h"
+#include "driver/adc.h"
 #include "ESP_functions.h"
 
 const char* ssid = config.ssid; //WiFi SSID
@@ -50,6 +51,7 @@ TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite sprite = TFT_eSprite(&tft);
 TFT_eSprite sprite2 = TFT_eSprite(&tft);
 void setup() { 
+  //esp_deep_sleep_start(); 
   setCpuFrequencyMhz(10);
   Serial.begin(115200);
   Serial.print("Actual CPU freq @ boot= "); Serial.println (getCpuFrequencyMhz());
@@ -58,22 +60,30 @@ void setup() {
   Serial.println("setup Serial");
   Serial.println("Serial Txd is on pin: "+String(TX));
   Serial.println("Serial Rxd is on pin: "+String(RX));
-  print_reset_reason(rtc_get_reset_reason(0));//Find out the reset reason, if no SW-reset-> back to deep sleep !
-  print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
+ // print_reset_reason(rtc_get_reset_reason(0));//Find out the reset reason, if no SW-reset-> back to deep sleep !
+ // print_wakeup_reason(); //Print the wakeup reason for ESP32, go back to sleep is timer is wake-up source !
   analog_mean = analogRead(PIN_BAT);//fill FIR filter
   for(int i=0;i<(1/FIR_BAT);i++){Update_bat();}
   if(RTC_voltage_bat> (MINIMUM_VOLTAGE+0.2)){setCpuFrequencyMhz(40);}
   else {};
   Serial.print("Actual CPU freq @ Boot_screen= "); Serial.println (getCpuFrequencyMhz());
+ // pinMode(14,OUTPUT);
+ // digitalWrite(14,LOW);
   Boot_Screen1(RTC_voltage_bat); 
+ // digitalWrite(TFT_BL, LOW); 
+ // tft.writecommand(ST7789_SLPIN);// Sleep the display driver
+  delay(100);
   Serial.println(F("TFT Initialized"));
+ // esp_deep_sleep_start(); 
   Serial.println(RTC_calibration_bat);
   Serial.println("Configuring WDT...");
   esp_task_wdt_init(WDT_TIMEOUT, true); //enable panic so ESP32 restarts
   esp_task_wdt_add(NULL); //add current thread to WDT watch
+  /*
   esp_sleep_enable_ext0_wakeup(GPIO_NUM_xx,0);//for T-display, no need to wake up with timer !!!
   pinMode(WAKE_UP_GPIOyy, INPUT_PULLUP);
   esp_sleep_enable_ext1_wakeup(BUTTON_PIN_BITMASK,ESP_EXT1_WAKEUP_ALL_LOW);
+  */
   sdSPI.begin(SDCARD_CLK, SDCARD_MISO, SDCARD_MOSI, SDCARD_SS);//default 20 MHz gezet worden !
 
   struct timeval tv = { .tv_sec =  0, .tv_usec = 0 };
