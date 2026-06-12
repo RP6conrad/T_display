@@ -1,3 +1,4 @@
+ #Changes SW 5.92
 *  Support for 115200 baud gps modules (Beitian Bx122)
 *  Added two digits after decimal point in some statscreens
   ###Changes SW 5.91
