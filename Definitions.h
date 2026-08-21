@@ -35,7 +35,8 @@
 #define SDCARD_MISO 21  //2
 #define WAKE_UP_GPIO 35 //button on T-display, used as wakeup source
 #define WAKE_UP_GPIOyy 15 //for reed-switch
-#define BUTTON_PIN_BITMASK 0x8000// pinmask for pin 15, ext1 wake up !!!
+// Bitmask voor GPIO 15 = 1 << 15 (of hexadecimaal 0x8000)
+#define BUTTON_PIN_BITMASK (1ULL << GPIO_NUM_15) 
 #define GPIO_NUM_xx GPIO_NUM_35   //buton on T-display, used as wakeup source
 #define GPIO_NUM_yy GPIO_NUM_15   //strapping pin, but can used as wakeup source !!
 #define RXD2 32 //yellow is Tx Ublox, Beitian white is Tx
